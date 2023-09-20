@@ -25,7 +25,7 @@ public class ItemStorageImpl implements ItemStorage {
     @Override
     public Item updateItem(Item item) {
         log.info("Обновление item с id " + item.getId() + " в хранилище");
-        Item itemBeforeUpdate = items.get(item.getId() );
+        Item itemBeforeUpdate = items.get(item.getId());
         item.setName(item.getName() != null ? item.getName() : itemBeforeUpdate.getName());
         item.setDescription(item.getDescription() != null ? item.getDescription() : itemBeforeUpdate.getDescription());
         item.setAvailable(item.getAvailable() != null ? item.getAvailable() : itemBeforeUpdate.getAvailable());

@@ -27,7 +27,7 @@ public class UserStorageImpl implements UserStorage {
     @Override
     public User updateUser(User user) {
         log.info("Обновление пользователя с id " + user.getId() + " в хранилище");
-        User userBeforeUpdate = users.get(user.getId() );
+        User userBeforeUpdate = users.get(user.getId());
         user.setName(user.getName() != null ? user.getName() : userBeforeUpdate.getName());
         user.setEmail(user.getEmail() != null ? user.getEmail() : userBeforeUpdate.getEmail());
         users.put(user.getId(), user);
