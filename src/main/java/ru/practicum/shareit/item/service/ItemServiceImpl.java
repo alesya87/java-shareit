@@ -10,6 +10,7 @@ import ru.practicum.shareit.item.storage.ItemStorage;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -95,7 +96,7 @@ public class ItemServiceImpl implements ItemService {
 
     private boolean isOwnerCorrect(Long ownerId, ItemDto itemDto) {
         log.info("Проверка, что переданный владелец существует у item");
-        return itemDto.getOwnerId() == ownerId;
+        return Objects.equals(itemDto.getOwnerId(), ownerId);
     }
 
     private String textForSearchToLowerCase(String text) {
