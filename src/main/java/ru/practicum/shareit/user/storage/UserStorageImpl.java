@@ -2,12 +2,12 @@ package ru.practicum.shareit.user.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
+import ru.practicum.shareit.user.model.User;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -16,46 +16,50 @@ public class UserStorageImpl implements UserStorage {
     private long id = 0;
 
     @Override
-    public User addUser(User user) {
-        log.info("Добавление пользователя в хранилище");
-        users.put(++id, user);
-        user.setId(id);
-        log.info("Пользователь с id " + id + " добавлен в хранилище");
-        return user;
-    }
-
-    @Override
-    public User updateUser(User user) {
-        log.info("Обновление пользователя с id " + user.getId() + " в хранилище");
-        User userBeforeUpdate = users.get(user.getId());
-        user.setName(user.getName() != null ? user.getName() : userBeforeUpdate.getName());
-        user.setEmail(user.getEmail() != null ? user.getEmail() : userBeforeUpdate.getEmail());
+    public UserDto addUser(UserDto userDto) {
+        log.debug("Добавление пользователя в хранилище");
+        User user = UserMapper.mapToUser(userDto);
+        user.setId(++id);
         users.put(user.getId(), user);
-        log.info("Пользователь с id " + user.getId() + " обновлен в хранилище");
-        return user;
+        log.debug("Пользователь с id {} добавлен в хранилище", user.getId());
+        return UserMapper.mapToUserDto(user);
     }
 
     @Override
-    public User getUserById(Long id) {
-        log.info("Получение пользователя по id " + id + " из хранилища");
-        return users.get(id);
+    public UserDto updateUser(UserDto userDto, Long userId) {
+        log.debug("Обновление пользователя с id {} в хранилище", userDto.getId());
+        User user = users.get(userId);
+        user.setName(userDto.getName() != null ? userDto.getName() : user.getName());
+        user.setEmail(userDto.getEmail() != null ? userDto.getEmail() : user.getEmail());
+        users.put(userId, user);
+        log.debug("Пользователь с id {} обновлен в хранилище", userId);
+        return UserMapper.mapToUserDto(user);
     }
 
     @Override
-    public List<User> getAllUsers() {
-        log.info("Получение списка всех пользователей из хранилища");
-        return new ArrayList<>(users.values());
+    public UserDto getUserById(Long id) {
+        log.debug("Получение пользователя по id {} из хранилища", id);
+        User user = users.get(id);
+        return user != null ? UserMapper.mapToUserDto(user) : null;
+    }
+
+    @Override
+    public List<UserDto> getAllUsers() {
+        log.debug("Получение списка всех пользователей из хранилища");
+        return new ArrayList<>(users.values()).stream()
+                .map(UserMapper::mapToUserDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public void deleteUserById(Long id) {
-        log.info("Удаление пользователя по id " + id + " из хранилища");
+        log.debug("Удаление пользователя по id {} из хранилища", id);
         users.remove(id);
     }
 
     @Override
     public void deleteAllUsers() {
-        log.info("Удаление всех полльзователей из хранилища");
+        log.debug("Удаление всех полльзователей из хранилища");
         users.clear();
     }
 }

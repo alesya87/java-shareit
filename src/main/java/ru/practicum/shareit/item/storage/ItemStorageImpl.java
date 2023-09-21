@@ -2,6 +2,8 @@ package ru.practicum.shareit.item.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.*;
@@ -14,49 +16,52 @@ public class ItemStorageImpl implements ItemStorage {
     private long id = 0;
 
     @Override
-    public Item addItem(Item item) {
-        log.info("Добавление item в хранилище");
-        items.put(++id, item);
-        item.setId(id);
-        log.info("Item с id " + id + " добавлен в хранилище");
-        return item;
-    }
-
-    @Override
-    public Item updateItem(Item item) {
-        log.info("Обновление item с id " + item.getId() + " в хранилище");
-        Item itemBeforeUpdate = items.get(item.getId());
-        item.setName(item.getName() != null ? item.getName() : itemBeforeUpdate.getName());
-        item.setDescription(item.getDescription() != null ? item.getDescription() : itemBeforeUpdate.getDescription());
-        item.setAvailable(item.getAvailable() != null ? item.getAvailable() : itemBeforeUpdate.getAvailable());
+    public ItemDto addItem(ItemDto itemDto, Long ownerId) {
+        log.debug("Добавление item в хранилище");
+        Item item = ItemMapper.mapToItem(itemDto, ownerId);
+        item.setId(++id);
         items.put(item.getId(), item);
-        log.info("Пользователь с id " + item.getId() + " обновлен в хранилище");
-        return item;
+        log.debug("Item с id {} добавлен в хранилище", item.getId());
+        return ItemMapper.mapToItemDto(item);
     }
 
     @Override
-    public Item getItemById(Long itemId) {
-        log.info("Получение item по id " + id + " из хранилища");
-        return items.get(id);
+    public ItemDto updateItem(ItemDto itemDto, Long itemId, Long ownerId) {
+        log.debug("Обновление item с id {} в хранилище", itemId);
+        Item item = items.get(itemId);
+        item.setName(itemDto.getName() != null ? itemDto.getName() : item.getName());
+        item.setDescription(itemDto.getDescription() != null ? itemDto.getDescription() : item.getDescription());
+        item.setAvailable(itemDto.getAvailable() != null ? itemDto.getAvailable() : item.getAvailable());
+        items.put(itemId, item);
+        log.debug("Пользователь с id {} обновлен в хранилище", itemId);
+        return ItemMapper.mapToItemDto(item);
     }
 
     @Override
-    public List<Item> getAllItemsByOwnerId(Long ownerId) {
-        log.info("Получение всех items по ownerId " + ownerId + " из хранилища");
+    public ItemDto getItemById(Long itemId) {
+        log.debug("Получение item по id {} из хранилища", id);
+        Item item = items.get(id);
+        return item != null ? ItemMapper.mapToItemDto(item) : null;
+    }
+
+    @Override
+    public List<ItemDto> getAllItemsByOwnerId(Long ownerId) {
+        log.debug("Получение всех items по ownerId {} из хранилища", ownerId);
         return new ArrayList<>(items.values()).stream()
                 .filter(item -> Objects.equals(item.getOwnerId(), ownerId))
+                .map(ItemMapper::mapToItemDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public void deleteItemById(Long itemId) {
-        log.info("Удаление item по id " + itemId + " из хранилища");
+        log.debug("Удаление item по id {} из хранилища", itemId);
         items.remove(itemId);
     }
 
     @Override
     public void deleteAllItemsByOwnerId(Long ownerId) {
-        log.info("Удаление всех items по ownerId " + ownerId + " из хранилища");
+        log.debug("Удаление всех items по ownerId {} из хранилища", ownerId);
         for (Item item : items.values()) {
             if (Objects.equals(item.getOwnerId(), ownerId)) {
                 items.remove(item.getId());
@@ -65,8 +70,8 @@ public class ItemStorageImpl implements ItemStorage {
     }
 
     @Override
-    public List<Item> getItemsBySearchQuery(String text) {
-        log.info("Получение списка всех items, содержащих подстроку " + text + " из хранилища");
+    public List<ItemDto> getItemsBySearchQuery(String text) {
+        log.debug("Получение списка всех items, содержащих подстроку {} из хранилища", text);
         if (text == null) {
             return new ArrayList<>();
         }
@@ -74,6 +79,7 @@ public class ItemStorageImpl implements ItemStorage {
                 .filter(item -> item.getName().toLowerCase().contains(text) ||
                         item.getDescription().toLowerCase().contains(text) &&
                                 item.getAvailable())
+                .map(ItemMapper::mapToItemDto)
                 .collect(Collectors.toList());
     }
 }

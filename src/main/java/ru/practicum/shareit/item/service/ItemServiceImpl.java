@@ -26,55 +26,52 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto addItem(ItemDto itemDto, Long ownerId) {
-        log.info("Сервис - добавление item");
+        log.debug("Сервис - добавление item");
         if (isOwnerEmpty(ownerId)) {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
-        return ItemMapper.mapToItemDto(itemStorage.addItem(ItemMapper.mapToItem(itemDto, ownerId)));
+        return itemStorage.addItem(itemDto, ownerId);
     }
 
     @Override
     public ItemDto updateItem(ItemDto itemDto, Long itemId, Long ownerId) {
-        log.info("Сервис - обновление item с id " + itemId);
+        log.debug("Сервис - обновление item с id {}", itemId);
         ItemDto itemBeforeUpdate = getItemById(itemId);
         if (!isOwnerCorrect(ownerId, itemBeforeUpdate)) {
             throw new EntityNotFoundException("Владелец c id " + ownerId + " у item с id " + itemId + " не найден");
         }
-        itemDto.setId(itemId);
-        return ItemMapper.mapToItemDto(itemStorage.updateItem(ItemMapper.mapToItem(itemDto, ownerId)));
+        return itemStorage.updateItem(itemDto, itemId, ownerId);
     }
 
     @Override
     public ItemDto getItemById(Long itemId) {
-        log.info("Сервис -получение item по id " + itemId);
-        Item item = itemStorage.getItemById(itemId);
-        log.info("Проверка item с id " + itemId + " на существование");
-        if (item == null) {
+        log.debug("Сервис -получение item по id {}", itemId);
+        ItemDto itemDto = itemStorage.getItemById(itemId);
+        log.debug("Проверка item с id {} на существование", itemId);
+        if (itemDto == null) {
             throw new EntityNotFoundException("item с id " + itemId + " не найден");
         }
-        return ItemMapper.mapToItemDto(item);
+        return itemDto;
     }
 
     @Override
     public List<ItemDto> getAllItemsByOwnerId(Long ownerId) {
-        log.info("Сервис - получение списка всех items для пользователя с id " + ownerId);
+        log.debug("Сервис - получение списка всех items для пользователя с id {}", ownerId);
         if (isOwnerEmpty(ownerId)) {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
-        return itemStorage.getAllItemsByOwnerId(ownerId).stream()
-                .map(ItemMapper::mapToItemDto)
-                .collect(Collectors.toList());
+        return itemStorage.getAllItemsByOwnerId(ownerId);
     }
 
     @Override
     public void deleteItemById(Long itemId) {
-        log.info("Сервис - удаление item по id " + itemId);
+        log.debug("Сервис - удаление item по id {}", itemId);
         itemStorage.deleteItemById(itemId);
     }
 
     @Override
     public void deleteAllItemsByOwnerId(Long ownerId) {
-        log.info("Сервис - удаление всех items для пользователя с id " + ownerId);
+        log.debug("Сервис - удаление всех items для пользователя с id {}", ownerId);
         if (isOwnerEmpty(ownerId)) {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
@@ -83,19 +80,17 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getItemsBySearchQuery(String text) {
-        log.info("Сервис - получение списка всех items, содержащих подстроку " + text);
-        return itemStorage.getItemsBySearchQuery(textForSearchToLowerCase(text)).stream()
-                .map(ItemMapper::mapToItemDto)
-                .collect(Collectors.toList());
+        log.debug("Сервис - получение списка всех items, содержащих подстроку {}", text);
+        return itemStorage.getItemsBySearchQuery(textForSearchToLowerCase(text));
     }
 
     private boolean isOwnerEmpty(Long ownerId) {
-        log.info("Проверка полльзователя на существование");
+        log.debug("Проверка пользователя на существование");
         return userStorage.getUserById(ownerId) == null;
     }
 
     private boolean isOwnerCorrect(Long ownerId, ItemDto itemDto) {
-        log.info("Проверка, что переданный владелец существует у item");
+        log.debug("Проверка, что переданный владелец существует у item");
         return Objects.equals(itemDto.getOwnerId(), ownerId);
     }
 

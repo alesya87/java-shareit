@@ -23,7 +23,7 @@ public class UserController {
     @PostMapping
     public UserDto addUser(@RequestBody @Valid UserDto userDto) {
         log.info("Получен POST-запрос к эндпоинту: '/users' на добавление пользователя: " +
-                "name: " + userDto.getName() + ", email: " + userDto.getEmail());
+                "name: |{}, email: {}", userDto.getName(), userDto.getEmail());
         if (!isValidEmail(userDto.getEmail())) {
             throw new IncorrectEmailException("Некорректный email: " + userDto.getEmail());
         }
@@ -32,8 +32,8 @@ public class UserController {
 
     @PatchMapping("/{userId}")
     public UserDto updateUser(@RequestBody UserDto userDto, @Valid @PathVariable @NotBlank Long userId) {
-        log.info("Получен PATCH-запрос к эндпоинту: '/users' на обновление пользователя с id " + userId +
-                ": " + userDto.toString());
+        log.info("Получен PATCH-запрос к эндпоинту: '/users' на обновление пользователя с id {}: {}",
+                userId, userDto.toString());
         if (userDto.getEmail() != null && !isValidEmail(userDto.getEmail())) {
             throw new IncorrectEmailException("Некорректный email: " + userDto.getEmail());
         }
@@ -42,7 +42,7 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public UserDto getUserById(@Valid @PathVariable @NotBlank Long userId) {
-        log.info("Получен GET-запрос к эндпоинту: '/users/{userId}' на получение пользователя по id " + userId);
+        log.info("Получен GET-запрос к эндпоинту: '/users/{userId}' на получение пользователя по id {}", userId);
         return userService.getUserById(userId);
     }
 
@@ -54,7 +54,7 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     public void deleteUserById(@PathVariable Long userId) {
-        log.info("Получен DELETE-запрос к эндпоинту: '/users/{userId}' на удаление пользователя по id " + userId);
+        log.info("Получен DELETE-запрос к эндпоинту: '/users/{userId}' на удаление пользователя по id {}", userId);
         userService.deleteUserById(userId);
     }
 
