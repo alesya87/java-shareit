@@ -2,76 +2,64 @@ package ru.practicum.shareit.user.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.exception.DuplicateEmailException;
+import ru.practicum.shareit.user.dto.UserAddDto;
 import ru.practicum.shareit.exception.EntityNotFoundException;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.dto.UserLogDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
 
 @Slf4j
 @Component
 public class UserServiceImpl implements UserService {
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
 
-    public UserServiceImpl(UserStorage userStorage) {
-        this.userStorage = userStorage;
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @Override
-    public UserDto addUser(UserDto userDto) {
+    public UserLogDto addUser(UserAddDto userAddDto) {
         log.debug("Сервис - добавление пользователя");
-        if (isDuplicateEmail(userDto, userDto.getId())) {
-            throw new DuplicateEmailException("Email " + userDto.getEmail() + " уже существует");
-        }
-        return userStorage.addUser(userDto);
+        return UserMapper.mapToUserLogDto(userRepository.save(UserMapper.mapToUser(userAddDto)));
     }
 
     @Override
-    public UserDto updateUser(UserDto userDto, Long userId) {
+    public UserLogDto updateUser(UserUpdateDto userUpdateDto, Long userId) {
         log.debug("Сервис -  обновление пользователя с id {}", userId);
-        getUserById(userId);
-        if (userDto.getEmail() != null && isDuplicateEmail(userDto, userId)) {
-            throw new DuplicateEmailException("Email " + userDto.getEmail() + " уже существует");
+        UserLogDto userBeforeUpdate = getUserById(userId);
+        if (userUpdateDto.getName() == null) {
+            userUpdateDto.setName(userBeforeUpdate.getName());
         }
-        return userStorage.updateUser(userDto, userId);
+        if (userUpdateDto.getEmail() == null) {
+            userUpdateDto.setEmail(userBeforeUpdate.getEmail());
+        }
+        return UserMapper.mapToUserLogDto(userRepository.save(UserMapper.mapToUser(userUpdateDto, userId)));
     }
 
     @Override
-    public UserDto getUserById(Long id) {
+    public UserLogDto getUserById(Long id) {
         log.debug("Сервис - получение пользователя по id {}", id);
-        UserDto userDto = userStorage.getUserById(id);
         log.debug("Проверка пользователя с id {} на существование", id);
-        if (userDto == null) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) {
             throw new EntityNotFoundException("пользователя с id " + id + " не существует");
         }
-        return userDto;
+        return UserMapper.mapToUserLogDto(user);
     }
 
     @Override
-    public List<UserDto> getAllUsers() {
+    public List<UserLogDto> getAllUsers() {
         log.debug("Сервис - получение списка всех пользователей");
-        return userStorage.getAllUsers();
+        return UserMapper.mapToListUserLogDto(userRepository.findAll());
     }
 
     @Override
     public void deleteUserById(Long id) {
         log.debug("Сервис - удаление пользователя по id {}", id);
-        userStorage.deleteUserById(id);
-    }
-
-    @Override
-    public void deleteAllUsers() {
-        log.debug("Сервис - удаление всех пользователей");
-        userStorage.deleteAllUsers();
-    }
-
-    private boolean isDuplicateEmail(UserDto userDto, Long userId) {
-        log.debug("Проверка email на дубликат");
-        return userStorage.getAllUsers()
-                .stream()
-                .filter(userStorage -> userStorage.getId() != userId)
-                .map(UserDto::getEmail)
-                .anyMatch(mail -> mail.equals(userDto.getEmail()));
+        userRepository.deleteById(id);
     }
 }

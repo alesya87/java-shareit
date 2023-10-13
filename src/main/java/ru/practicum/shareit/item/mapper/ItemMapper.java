@@ -1,26 +1,52 @@
 package ru.practicum.shareit.item.mapper;
 
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.item.dto.ItemAddDto;
+import ru.practicum.shareit.item.dto.ItemLogDto;
+import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class ItemMapper {
-    public static Item mapToItem(ItemDto itemDto, Long ownerId) {
+    public static Item mapToItem(ItemAddDto itemAddDto, Long ownerId) {
         return Item.builder()
-                .id(itemDto.getId())
-                .available(itemDto.getAvailable())
-                .description(itemDto.getDescription())
-                .name(itemDto.getName())
+                .available(itemAddDto.getAvailable())
+                .description(itemAddDto.getDescription())
+                .name(itemAddDto.getName())
                 .ownerId(ownerId)
                 .build();
     }
 
-    public static ItemDto mapToItemDto(Item item) {
-        return ItemDto.builder()
+    public static Item mapToItem(ItemUpdateDto itemUpdateDto, Long itemId, Long ownerId) {
+        return Item.builder()
+                .id(itemId)
+                .available(itemUpdateDto.getAvailable())
+                .description(itemUpdateDto.getDescription())
+                .name(itemUpdateDto.getName())
+                .ownerId(ownerId)
+                .build();
+    }
+
+    public static ItemLogDto mapToItemLogDto(Item item) {
+        return ItemLogDto.builder()
                 .id(item.getId())
                 .available(item.getAvailable())
                 .description(item.getDescription())
                 .name(item.getName())
                 .ownerId(item.getOwnerId())
+                .nextBooking(item.getNextBooking() != null ?
+                        BookingMapper.mapToBookingShortDto(item.getNextBooking())
+                        : null)
+                .lastBooking(item.getLastBooking() != null ? BookingMapper.mapToBookingShortDto(item.getLastBooking())
+                        : null)
                 .build();
+    }
+
+    public static List<ItemLogDto> mapToListItemLogDto(List<Item> items) {
+        return items.stream()
+                .map(ItemMapper::mapToItemLogDto)
+                .collect(Collectors.toList());
     }
 }
