@@ -56,7 +56,7 @@ public class BookingServiceImpl implements BookingService {
             throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
         }
 
-        if (item.getOwnerId() == userId) {
+        if (Objects.equals(item.getOwnerId(), userId)) {
             throw new EntityAccessException("Пользователь не может забронировать свой предмет");
         }
 
@@ -167,7 +167,6 @@ public class BookingServiceImpl implements BookingService {
             throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
         }
 
-        List<Booking> bookings = new ArrayList<>();
         LocalDateTime currentDateTime = LocalDateTime.now();
         switch (state) {
             case ALL:
