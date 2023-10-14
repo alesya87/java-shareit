@@ -18,7 +18,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByStartIsAfterAndBookerIdOrderByStartDesc(LocalDateTime localDateTime, Long bookerId);
 
-    List<Booking> findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(Long ownerId, LocalDateTime start, LocalDateTime end);
+    List<Booking> findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(Long ownerId, LocalDateTime start,
+                                                                          LocalDateTime end);
 
     List<Booking> findByStatusAndBookerIdOrderByStartDesc(BookingStatus status, Long bookerId);
 
@@ -28,11 +29,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByItem_OwnerIdAndEndIsAfterOrderByStartDesc(Long ownerId, LocalDateTime localDateTime);
 
-    List<Booking> findByItem_OwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(Long ownerId, LocalDateTime start, LocalDateTime end);
+    List<Booking> findByItem_OwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(Long ownerId, LocalDateTime start,
+                                                                              LocalDateTime end);
 
     List<Booking> findByItem_OwnerIdAndStatusOrderByStartDesc(Long ownerId, BookingStatus status);
 
-    Booking findFirst1ByItemIdAndStartIsBeforeAndStatusNotOrderByStart(Long itemId, LocalDateTime nowDateTime, BookingStatus bookingStatus);
+    Booking findFirst1ByItemIdAndStartIsBeforeAndStatusNotOrderByStartDesc(Long itemId, LocalDateTime nowDateTime,
+                                                                           BookingStatus bookingStatus);
 
-    Booking findFirst1ByItemIdAndStartIsAfterAndStatusNotOrderByStart(Long itemId, LocalDateTime nowDateTime, BookingStatus bookingStatus);
+    Booking findFirst1ByItemIdAndStartIsAfterAndStatusNotOrderByStart(Long itemId, LocalDateTime nowDateTime,
+                                                                      BookingStatus bookingStatus);
+
+    boolean existsByBookerIdAndItemIdAndStatusAndEndBefore(Long userId, Long itemId,
+                                                            BookingStatus bookingStatus, LocalDateTime localDateTime);
 }

@@ -4,17 +4,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.EntityNotAvailableException;
 import ru.practicum.shareit.exception.EntityNotFoundException;
+import ru.practicum.shareit.item.comment.CommentRepository;
+import ru.practicum.shareit.item.comment.dto.CommentAddDto;
+import ru.practicum.shareit.item.comment.dto.CommentInItemLogDto;
+import ru.practicum.shareit.item.comment.mapper.CommentMapper;
+import ru.practicum.shareit.item.comment.model.Comment;
 import ru.practicum.shareit.item.dto.ItemAddDto;
 import ru.practicum.shareit.item.dto.ItemLogDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,13 +32,14 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
-
+    private final CommentRepository commentRepository;
 
     public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository,
-                           BookingRepository bookingRepository) {
+                           BookingRepository bookingRepository, CommentRepository commentRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
     }
 
     @Override
@@ -71,6 +80,8 @@ public class ItemServiceImpl implements ItemService {
             throw new EntityNotFoundException("item с id " + itemId + " не найден");
         }
         setItemBooking(item, ownerId);
+        setItemComments(item);
+
         return ItemMapper.mapToItemLogDto(item);
     }
 
@@ -83,6 +94,7 @@ public class ItemServiceImpl implements ItemService {
         List<Item> items = itemRepository.findByOwnerIdOrderById(ownerId);
         for (Item item : items) {
             setItemBooking(item, ownerId);
+            setItemComments(item);
         }
         return ItemMapper.mapToListItemLogDto(items);
     }
@@ -102,6 +114,34 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.mapToListItemLogDto(itemRepository.getItemsBySearchQuery(text));
     }
 
+    @Override
+    public CommentInItemLogDto addComment(CommentAddDto commentAddDto, Long authorId, Long itemId) {
+        Item item = itemRepository.findById(itemId).orElse(null);
+        User author = userRepository.findById(authorId).orElse(null);
+
+        if (item == null) {
+            throw new EntityNotFoundException("Вещи с id " + itemId + " не существует");
+        }
+
+        if (author == null) {
+            throw new EntityNotFoundException("Пользователя с id " + authorId + " не существует");
+        }
+
+        if (!bookingRepository.existsByBookerIdAndItemIdAndStatusAndEndBefore(authorId, itemId,
+                BookingStatus.APPROVED, LocalDateTime.now())) {
+            throw new EntityNotAvailableException("Вы еще не арендовали эту вещь");
+        }
+
+        Comment comment = Comment.builder()
+                .text(commentAddDto.getText())
+                .itemId(itemId)
+                .author(author)
+                .created(LocalDateTime.now())
+                .build();
+
+        return CommentMapper.mapToCommentInItemLogDto(commentRepository.save(comment));
+    }
+
     private boolean isOwnerEmpty(Long ownerId) {
         log.debug("Проверка пользователя на существование");
         return !userRepository.existsById(ownerId);
@@ -110,12 +150,19 @@ public class ItemServiceImpl implements ItemService {
     private Item setItemBooking(Item item, Long ownerId) {
         if (Objects.equals(item.getOwnerId(), ownerId)) {
             item.setLastBooking(bookingRepository
-                    .findFirst1ByItemIdAndStartIsBeforeAndStatusNotOrderByStart(
+                    .findFirst1ByItemIdAndStartIsBeforeAndStatusNotOrderByStartDesc(
                             item.getId(), LocalDateTime.now(), BookingStatus.REJECTED));
             item.setNextBooking(bookingRepository
                     .findFirst1ByItemIdAndStartIsAfterAndStatusNotOrderByStart(
                             item.getId(), LocalDateTime.now(), BookingStatus.REJECTED));
         }
+        return item;
+    }
+
+    private Item setItemComments(Item item) {
+        List<Comment> comments = commentRepository.findAllByItemId(item.getId());
+        item.setComments(comments.size() != 0 ? CommentMapper.mapToListCommentInItemLogDto(comments) :
+                Collections.emptyList());
         return item;
     }
 

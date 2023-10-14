@@ -61,7 +61,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (!item.getAvailable()) {
-            throw new BookingNotAvailableException("Вещь с id " + bookingAddDto.getItemId() +
+            throw new EntityNotAvailableException("Вещь с id " + bookingAddDto.getItemId() +
                     " не доступна к бронированию");
         }
 
@@ -95,7 +95,7 @@ public class BookingServiceImpl implements BookingService {
 
         if (bookingRepository.existsByItem_IdAndStartBeforeAndEndAfter(booking.getItem().getId(),
                 booking.getStart(), booking.getEnd())) {
-            throw new BookingNotAvailableException("Вещь с id " + booking.getItem().getId() +
+            throw new EntityNotAvailableException("Вещь с id " + booking.getItem().getId() +
                     "  не доступна к бронированию на выбранное время");
         }
 
@@ -138,21 +138,21 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime currentDateTime = LocalDateTime.now();
         switch (state) {
             case ALL:
-                return BookingMapper.mapToBookingDtoList(bookingRepository
+                return BookingMapper.mapToListBookingDto(bookingRepository
                         .findByBookerIdOrderByStartDesc(userId));
             case PAST:
-                return BookingMapper.mapToBookingDtoList(bookingRepository
+                return BookingMapper.mapToListBookingDto(bookingRepository
                         .findByEndIsBeforeAndBookerIdOrderByStartDesc(currentDateTime, userId));
             case FUTURE:
-                return BookingMapper.mapToBookingDtoList(bookingRepository
+                return BookingMapper.mapToListBookingDto(bookingRepository
                         .findByStartIsAfterAndBookerIdOrderByStartDesc(currentDateTime, userId));
             case CURRENT:
-                return BookingMapper.mapToBookingDtoList(bookingRepository
+                return BookingMapper.mapToListBookingDto(bookingRepository
                         .findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(userId,
                                 currentDateTime, currentDateTime));
             case WAITING:
             case REJECTED:
-                return BookingMapper.mapToBookingDtoList(bookingRepository
+                return BookingMapper.mapToListBookingDto(bookingRepository
                         .findByStatusAndBookerIdOrderByStartDesc(state, userId));
         }
         throw new UnsupportedStatusException("Unknown state: " + state);
@@ -171,21 +171,21 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime currentDateTime = LocalDateTime.now();
         switch (state) {
             case ALL:
-                return BookingMapper.mapToBookingDtoList(bookingRepository
+                return BookingMapper.mapToListBookingDto(bookingRepository
                         .findByItem_OwnerIdOrderByStartDesc(userId));
             case PAST:
-                return BookingMapper.mapToBookingDtoList(bookingRepository
+                return BookingMapper.mapToListBookingDto(bookingRepository
                         .findByItem_OwnerIdAndEndIsBeforeOrderByStartDesc(userId, currentDateTime));
             case FUTURE:
-                return BookingMapper.mapToBookingDtoList(bookingRepository
+                return BookingMapper.mapToListBookingDto(bookingRepository
                         .findByItem_OwnerIdAndEndIsAfterOrderByStartDesc(userId, currentDateTime));
             case CURRENT:
-                return BookingMapper.mapToBookingDtoList(bookingRepository
+                return BookingMapper.mapToListBookingDto(bookingRepository
                         .findByItem_OwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(userId,
                                 currentDateTime, currentDateTime));
             case WAITING:
             case REJECTED:
-                return BookingMapper.mapToBookingDtoList(bookingRepository
+                return BookingMapper.mapToListBookingDto(bookingRepository
                         .findByItem_OwnerIdAndStatusOrderByStartDesc(userId, state));
         }
         throw new UnsupportedStatusException("Unknown state: " + state);

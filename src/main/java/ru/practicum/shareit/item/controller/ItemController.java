@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
+import ru.practicum.shareit.item.comment.dto.CommentAddDto;
+import ru.practicum.shareit.item.comment.dto.CommentInItemLogDto;
 import ru.practicum.shareit.item.dto.ItemAddDto;
 import ru.practicum.shareit.item.dto.ItemLogDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
@@ -20,6 +22,7 @@ import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Slf4j
@@ -72,5 +75,13 @@ public class ItemController {
     public List<ItemLogDto> getItemsBySearchQuery(@RequestParam(required = false) String text) {
         log.info("Получен GET-запрос к эндпоинту: '/items/search' на получение списка всех items, содержащих подстроку {}", text);
         return itemService.getItemsBySearchQuery(text);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentInItemLogDto addComment(@Valid @RequestBody CommentAddDto comment,
+                                          @Valid @NotBlank @RequestHeader(OWNER_HEADER) Long authorId,
+                                          @Valid @NotBlank @PathVariable Long itemId) {
+        log.info("Получен POST-запрос к эндпоинту: '/items//{itemId}/comment' на добавление комментария для вещи {}", itemId);
+        return itemService.addComment(comment, authorId, itemId);
     }
 }

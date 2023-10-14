@@ -24,7 +24,7 @@ public class ErrorHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class,
             IncorrectEmailException.class,
             MissingRequestHeaderException.class,
-            BookingNotAvailableException.class,
+            EntityNotAvailableException.class,
             IncorrectTimeDateException.class,
             UnsupportedStatusException.class,
             DuplicateDataException.class})

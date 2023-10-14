@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.item.comment.dto.CommentInItemLogDto;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -17,6 +18,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Column;
 import javax.persistence.Transient;
+import java.util.List;
 
 @Getter
 @Setter
@@ -43,4 +45,6 @@ public class Item {
     private Booking lastBooking;
     @Transient
     private Booking nextBooking;
+    @Transient
+    private List<CommentInItemLogDto> comments;
 }

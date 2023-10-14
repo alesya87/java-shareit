@@ -41,6 +41,7 @@ public class ItemMapper {
                         : null)
                 .lastBooking(item.getLastBooking() != null ? BookingMapper.mapToBookingShortDto(item.getLastBooking())
                         : null)
+                .comments(item.getComments())
                 .build();
     }
 

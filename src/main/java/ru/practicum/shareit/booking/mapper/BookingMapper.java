@@ -21,7 +21,7 @@ public class BookingMapper {
                 .build();
     }
 
-    public static List<BookingLogDto> mapToBookingDtoList(List<Booking> bookings) {
+    public static List<BookingLogDto> mapToListBookingDto(List<Booking> bookings) {
         return bookings.stream()
                 .map(BookingMapper::mapToBookingLogDto)
                 .collect(Collectors.toList());
