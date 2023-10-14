@@ -2,6 +2,8 @@ package ru.practicum.shareit.item.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.EntityNotAvailableException;
@@ -21,10 +23,8 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -79,8 +79,17 @@ public class ItemServiceImpl implements ItemService {
         if (item == null) {
             throw new EntityNotFoundException("item с id " + itemId + " не найден");
         }
-        setItemBooking(item, ownerId);
-        setItemComments(item);
+        if (Objects.equals(item.getOwnerId(), ownerId)) {
+            item.setLastBooking(bookingRepository
+                    .findFirst1ByItemIdAndStartIsBeforeAndStatusNotOrderByStartDesc(
+                            item.getId(), LocalDateTime.now(), BookingStatus.REJECTED));
+            item.setNextBooking(bookingRepository
+                    .findFirst1ByItemIdAndStartIsAfterAndStatusNotOrderByStart(
+                            item.getId(), LocalDateTime.now(), BookingStatus.REJECTED));
+        }
+        List<Comment> comments = commentRepository.findAllByItemId(item.getId());
+        item.setComments(comments.size() != 0 ? CommentMapper.mapToListCommentInItemLogDto(comments) :
+                Collections.emptyList());
 
         return ItemMapper.mapToItemLogDto(item);
     }
@@ -92,11 +101,44 @@ public class ItemServiceImpl implements ItemService {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
         List<Item> items = itemRepository.findByOwnerIdOrderById(ownerId);
-        for (Item item : items) {
-            setItemBooking(item, ownerId);
-            setItemComments(item);
-        }
-        return ItemMapper.mapToListItemLogDto(items);
+        List<Long> itemIds = items.stream()
+                .map(Item::getId)
+                .collect(Collectors.toList());
+        List<Booking> bookings = bookingRepository.findAllByItemIdInAndStatusNot(itemIds,
+                BookingStatus.REJECTED);
+        List<Comment> comments = commentRepository.findAllByItemIdIn(itemIds);
+
+        return items.stream()
+                .map(item -> {
+                    ItemLogDto itemLogDto = ItemMapper.mapToItemLogDto(item);
+
+                    Booking lastBooking = bookings.stream()
+                            .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
+                                    booking.getStart().isBefore(LocalDateTime.now()))
+                            .max(Comparator.comparing(Booking::getStart))
+                            .orElse(null);
+
+                    Booking nextBooking = bookings.stream()
+                            .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
+                                    booking.getStart().isAfter(LocalDateTime.now()))
+                            .min(Comparator.comparing(Booking::getStart))
+                            .orElse(null);
+
+                    List<CommentInItemLogDto> commentDto = comments.stream()
+                            .map(CommentMapper::mapToCommentInItemLogDto)
+                            .collect(Collectors.toList());
+
+                    if (lastBooking != null) {
+                        itemLogDto.setLastBooking(BookingMapper.mapToBookingShortDto(lastBooking));
+                    }
+                    if (nextBooking != null) {
+                        itemLogDto.setNextBooking(BookingMapper.mapToBookingShortDto(nextBooking));
+                    }
+                    itemLogDto.setComments(commentDto);
+
+                    return itemLogDto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -145,25 +187,6 @@ public class ItemServiceImpl implements ItemService {
     private boolean isOwnerEmpty(Long ownerId) {
         log.debug("Проверка пользователя на существование");
         return !userRepository.existsById(ownerId);
-    }
-
-    private Item setItemBooking(Item item, Long ownerId) {
-        if (Objects.equals(item.getOwnerId(), ownerId)) {
-            item.setLastBooking(bookingRepository
-                    .findFirst1ByItemIdAndStartIsBeforeAndStatusNotOrderByStartDesc(
-                            item.getId(), LocalDateTime.now(), BookingStatus.REJECTED));
-            item.setNextBooking(bookingRepository
-                    .findFirst1ByItemIdAndStartIsAfterAndStatusNotOrderByStart(
-                            item.getId(), LocalDateTime.now(), BookingStatus.REJECTED));
-        }
-        return item;
-    }
-
-    private Item setItemComments(Item item) {
-        List<Comment> comments = commentRepository.findAllByItemId(item.getId());
-        item.setComments(comments.size() != 0 ? CommentMapper.mapToListCommentInItemLogDto(comments) :
-                Collections.emptyList());
-        return item;
     }
 
     private boolean isOwnerCorrect(Long ownerId, Item item) {
