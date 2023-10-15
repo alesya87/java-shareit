@@ -2,7 +2,6 @@ package ru.practicum.shareit.item.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -87,10 +86,6 @@ public class ItemServiceImpl implements ItemService {
                     .findFirst1ByItemIdAndStartIsAfterAndStatusNotOrderByStart(
                             item.getId(), LocalDateTime.now(), BookingStatus.REJECTED));
         }
-        List<Comment> comments = commentRepository.findAllByItemId(item.getId());
-        item.setComments(comments.size() != 0 ? CommentMapper.mapToListCommentInItemLogDto(comments) :
-                Collections.emptyList());
-
         return ItemMapper.mapToItemLogDto(item);
     }
 
@@ -110,8 +105,6 @@ public class ItemServiceImpl implements ItemService {
 
         return items.stream()
                 .map(item -> {
-                    ItemLogDto itemLogDto = ItemMapper.mapToItemLogDto(item);
-
                     Booking lastBooking = bookings.stream()
                             .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
                                     booking.getStart().isBefore(LocalDateTime.now()))
@@ -124,18 +117,10 @@ public class ItemServiceImpl implements ItemService {
                             .min(Comparator.comparing(Booking::getStart))
                             .orElse(null);
 
-                    List<CommentInItemLogDto> commentDto = comments.stream()
-                            .map(CommentMapper::mapToCommentInItemLogDto)
-                            .collect(Collectors.toList());
+                    item.setLastBooking(lastBooking);
+                    item.setNextBooking(nextBooking);
 
-                    if (lastBooking != null) {
-                        itemLogDto.setLastBooking(BookingMapper.mapToBookingShortDto(lastBooking));
-                    }
-                    if (nextBooking != null) {
-                        itemLogDto.setNextBooking(BookingMapper.mapToBookingShortDto(nextBooking));
-                    }
-                    itemLogDto.setComments(commentDto);
-
+                    ItemLogDto itemLogDto = ItemMapper.mapToItemLogDto(item);
                     return itemLogDto;
                 })
                 .collect(Collectors.toList());

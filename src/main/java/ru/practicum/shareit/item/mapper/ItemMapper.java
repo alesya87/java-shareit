@@ -1,11 +1,13 @@
 package ru.practicum.shareit.item.mapper;
 
 import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.item.comment.mapper.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemAddDto;
 import ru.practicum.shareit.item.dto.ItemLogDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,7 +43,8 @@ public class ItemMapper {
                         : null)
                 .lastBooking(item.getLastBooking() != null ? BookingMapper.mapToBookingShortDto(item.getLastBooking())
                         : null)
-                .comments(item.getComments())
+                .comments(item.getComments() != null ? CommentMapper.mapToListCommentInItemLogDto(item.getComments())
+                        : Collections.emptyList())
                 .build();
     }
 
