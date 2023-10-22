@@ -1,6 +1,9 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -18,9 +21,12 @@ import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,22 +38,33 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository itemRequestRepository;
 
     public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository,
-                           BookingRepository bookingRepository, CommentRepository commentRepository) {
+                           BookingRepository bookingRepository, CommentRepository commentRepository,
+                           ItemRequestRepository itemRequestRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
         this.commentRepository = commentRepository;
+        this.itemRequestRepository = itemRequestRepository;
     }
 
+    @Transactional
     @Override
     public ItemLogDto addItem(ItemAddDto itemAddDto, Long ownerId) {
         log.debug("Сервис - добавление item");
         if (isOwnerEmpty(ownerId)) {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
-        return ItemMapper.mapToItemLogDto(itemRepository.save(ItemMapper.mapToItem(itemAddDto, ownerId)));
+
+        ItemRequest itemRequest = itemAddDto.getRequestId() != null ?
+                itemRequestRepository.findById(itemAddDto.getRequestId()).orElse(null)
+                : null;
+
+        Item item = itemRepository.save(ItemMapper.mapToItem(itemAddDto, ownerId, itemRequest));
+
+        return ItemMapper.mapToItemLogDto(item);
     }
 
     @Override
@@ -90,12 +107,16 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemLogDto> getAllItemsByOwnerId(Long ownerId) {
+    public List<ItemLogDto> getAllItemsByOwnerId(Long ownerId, int from, int size) {
         log.debug("Сервис - получение списка всех items для пользователя с id {}", ownerId);
         if (isOwnerEmpty(ownerId)) {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
-        List<Item> items = itemRepository.findByOwnerIdOrderById(ownerId);
+
+        Sort sort = Sort.by(Sort.Order.asc("id"));
+        Pageable pageable = PageRequest.of(from / size, size, sort);
+
+        List<Item> items = itemRepository.findByOwnerId(ownerId, pageable);
         List<Long> itemIds = items.stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
@@ -133,12 +154,13 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemLogDto> getItemsBySearchQuery(String text) {
+    public List<ItemLogDto> getItemsBySearchQuery(String text, int from, int size) {
         log.debug("Сервис - получение списка всех items, содержащих подстроку {}", text);
         if (text == null || text.isBlank()) {
             return new ArrayList<>();
         }
-        return ItemMapper.mapToListItemLogDto(itemRepository.getItemsBySearchQuery(text));
+        Pageable pageable = PageRequest.of(from / size, size);
+        return ItemMapper.mapToListItemLogDto(itemRepository.getItemsBySearchQuery(text, pageable));
     }
 
     @Override
@@ -159,12 +181,7 @@ public class ItemServiceImpl implements ItemService {
             throw new EntityNotAvailableException("Вы еще не арендовали эту вещь");
         }
 
-        Comment comment = Comment.builder()
-                .text(commentAddDto.getText())
-                .itemId(itemId)
-                .author(author)
-                .created(LocalDateTime.now())
-                .build();
+        Comment comment = CommentMapper.mapToComment(commentAddDto, itemId, author);
 
         return CommentMapper.mapToCommentInItemLogDto(commentRepository.save(comment));
     }

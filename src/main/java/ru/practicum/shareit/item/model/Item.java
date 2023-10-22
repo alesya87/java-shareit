@@ -10,8 +10,19 @@ import lombok.Builder;
 
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.comment.model.Comment;
+import ru.practicum.shareit.request.model.ItemRequest;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.Id;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Column;
+import javax.persistence.Transient;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.FetchType;
 import java.util.List;
 
 @Getter
@@ -42,4 +53,7 @@ public class Item {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id")
     private List<Comment> comments;
+    @OneToOne
+    @JoinColumn(name = "request_id")
+    private ItemRequest itemRequest;
 }

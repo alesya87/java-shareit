@@ -2,6 +2,7 @@ package ru.practicum.shareit.user.controller;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,12 +18,13 @@ import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping(path = "/users")
+@Validated
 public class UserController {
     private final UserService userService;
 
@@ -31,21 +33,21 @@ public class UserController {
     }
 
     @PostMapping
-    public UserLogDto addUser(@RequestBody @Valid UserAddDto userAddDto) {
+    public UserLogDto addUser(@Valid @RequestBody UserAddDto userAddDto) {
         log.info("Получен POST-запрос к эндпоинту: '/users' на добавление пользователя: " +
                 "name: |{}, email: {}", userAddDto.getName(), userAddDto.getEmail());
         return userService.addUser(userAddDto);
     }
 
     @PatchMapping("/{userId}")
-    public UserLogDto updateUser(@RequestBody @Valid UserUpdateDto userUpdateDto, @Valid @PathVariable @NotBlank Long userId) {
+    public UserLogDto updateUser(@Valid @RequestBody UserUpdateDto userUpdateDto, @Valid @PathVariable @NotNull Long userId) {
         log.info("Получен PATCH-запрос к эндпоинту: '/users' на обновление пользователя с id {}: {}",
                 userId, userUpdateDto.toString());
         return userService.updateUser(userUpdateDto, userId);
     }
 
     @GetMapping("/{userId}")
-    public UserLogDto getUserById(@Valid @PathVariable @NotBlank Long userId) {
+    public UserLogDto getUserById(@Valid @PathVariable @NotNull Long userId) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}' на получение пользователя по id {}", userId);
         return userService.getUserById(userId);
     }

@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.controller;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,11 +19,13 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = "/bookings")
+@Validated
 @Slf4j
 public class BookingController {
     private final BookingService bookingService;
@@ -33,39 +36,43 @@ public class BookingController {
     }
 
     @PostMapping
-    public BookingLogDto postBookings(@RequestHeader(OWNER_HEADER) @Valid @NotNull Long userId,
-                                      @RequestBody @Valid BookingAddDto bookingAddDto) {
+    public BookingLogDto postBookings(@Valid @RequestHeader(OWNER_HEADER) @NotNull Long userId,
+                                      @Valid @RequestBody BookingAddDto bookingAddDto) {
         log.debug("Поступил запрос на создание бронирования item с id {} для ползователя с id {}.",
                 bookingAddDto.getItemId(), userId);
         return bookingService.addBooking(userId, bookingAddDto);
     }
 
     @PatchMapping("/{bookingId}")
-    public BookingLogDto patchApproved(@RequestHeader(OWNER_HEADER) @Valid @NotNull Long userId,
-                                       @RequestParam @Valid @NotNull Boolean approved,
+    public BookingLogDto patchApproved(@Valid @RequestHeader(OWNER_HEADER) @NotNull Long userId,
+                                       @Valid @RequestParam @NotNull Boolean approved,
                                        @Valid @NotNull @PathVariable Long bookingId) {
         log.debug("Поступил запрос на одобрение(отклонение) бронирования с id {}", bookingId);
         return bookingService.updateBookingStatus(userId, approved, bookingId);
     }
 
     @GetMapping("/{bookingId}")
-    public BookingLogDto getBookingById(@RequestHeader(OWNER_HEADER) @Valid @NotNull Long userId,
-                                        @PathVariable @Valid @NotNull Long bookingId) {
+    public BookingLogDto getBookingById(@Valid @RequestHeader(OWNER_HEADER) @NotNull Long userId,
+                                        @Valid @PathVariable @NotNull Long bookingId) {
         log.debug("Поступил запрос на получение бронирования с id {}.", bookingId);
         return bookingService.getBookingById(userId, bookingId);
     }
 
     @GetMapping
-    public List<BookingLogDto> getAllUserBookings(@RequestParam(defaultValue = "ALL") @Valid @NotNull BookingStatus state,
-                                                  @RequestHeader(OWNER_HEADER) @Valid @NotNull Long userId) {
+    public List<BookingLogDto> getAllUserBookings(@Valid @RequestParam(defaultValue = "ALL") @NotNull BookingStatus state,
+                                                  @RequestHeader(OWNER_HEADER) @Valid @NotNull Long userId,
+                                                  @Valid @RequestParam(defaultValue = "0") @Min(value = 0) int from,
+                                                  @Valid @RequestParam(defaultValue = "10") @Min(value = 1) int size) {
         log.debug("Поступил запрос на получение всех бронирований пользователя {} со статусом {}", userId, state);
-        return bookingService.getAllUserBookings(state, userId);
+        return bookingService.getAllUserBookings(state, userId, from, size);
     }
 
     @GetMapping("/owner")
-    public List<BookingLogDto> getAllItemBookingsUser(@RequestHeader(OWNER_HEADER) @Valid @NotNull Long userId,
-                                                      @RequestParam(defaultValue = "ALL") BookingStatus state) {
+    public List<BookingLogDto> getAllItemBookingsUser(@Valid @RequestHeader(OWNER_HEADER) @NotNull Long userId,
+                                                      @RequestParam(defaultValue = "ALL") BookingStatus state,
+                                                      @Valid @RequestParam(defaultValue = "0") @Min(value = 0) int from,
+                                                      @Valid @RequestParam(defaultValue = "10") @Min(value = 1) int size) {
         log.debug("Поступил запрос на получение всех бронировании от пользователя {} со статусом {}", userId, state);
-        return bookingService.getAllItemBookingsUser(userId, state);
+        return bookingService.getAllItemBookingsUser(userId, state, from, size);
     }
 }

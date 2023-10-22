@@ -8,11 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
-import java.util.List;
-
-import ru.practicum.shareit.booking.dto.BookingShortDto;
-import ru.practicum.shareit.item.comment.dto.CommentInItemLogDto;
-
 @Getter
 @Setter
 @ToString
@@ -20,14 +15,10 @@ import ru.practicum.shareit.item.comment.dto.CommentInItemLogDto;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ItemLogDto {
+public class ItemInRequestLogDto {
     private Long id;
     private String name;
     private String description;
-    private Boolean available;
-    private Long ownerId;
-    private BookingShortDto lastBooking;
-    private BookingShortDto nextBooking;
-    private List<CommentInItemLogDto> comments;
     private Long requestId;
+    private Boolean available;
 }
