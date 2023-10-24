@@ -54,6 +54,16 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.puppycrawl.tools</groupId>
+			<artifactId>checkstyle</artifactId>
+			<version>10.3</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -106,13 +116,8 @@
 							<phase>compile</phase>
 						</execution>
 					</executions>
-					<dependencies>
-<!--						<dependency>-->
-<!--							<groupId>com.puppycrawl.tools</groupId>-->
-<!--							<artifactId>checkstyle</artifactId>-->
-<!--							<version>10.3</version>-->
-<!--						</dependency>-->
-					</dependencies>
+<!--					<dependencies>						-->
+<!--					</dependencies>-->
 				</plugin>
 				<plugin>
 					<groupId>com.github.spotbugs</groupId>
@@ -237,5 +242,4 @@
 			</build>
 		</profile>
 	</profiles>
-
 </project>

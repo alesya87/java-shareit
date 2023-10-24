@@ -2,96 +2,180 @@ package ru.practicum.shareit.item.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.EntityNotAvailableException;
 import ru.practicum.shareit.exception.EntityNotFoundException;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.storage.ItemStorage;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.item.comment.CommentRepository;
+import ru.practicum.shareit.item.comment.dto.CommentAddDto;
+import ru.practicum.shareit.item.comment.dto.CommentInItemLogDto;
+import ru.practicum.shareit.item.comment.mapper.CommentMapper;
+import ru.practicum.shareit.item.comment.model.Comment;
+import ru.practicum.shareit.item.dto.ItemAddDto;
+import ru.practicum.shareit.item.dto.ItemLogDto;
+import ru.practicum.shareit.item.dto.ItemUpdateDto;
+import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
-import java.util.List;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 public class ItemServiceImpl implements ItemService {
-    private final ItemStorage itemStorage;
-    private final UserStorage userStorage;
+    private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
-    public ItemServiceImpl(ItemStorage itemStorage, UserStorage userStorage) {
-        this.itemStorage = itemStorage;
-        this.userStorage = userStorage;
+    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository,
+                           BookingRepository bookingRepository, CommentRepository commentRepository) {
+        this.itemRepository = itemRepository;
+        this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
     }
 
     @Override
-    public ItemDto addItem(ItemDto itemDto, Long ownerId) {
+    public ItemLogDto addItem(ItemAddDto itemAddDto, Long ownerId) {
         log.debug("Сервис - добавление item");
         if (isOwnerEmpty(ownerId)) {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
-        return itemStorage.addItem(itemDto, ownerId);
+        return ItemMapper.mapToItemLogDto(itemRepository.save(ItemMapper.mapToItem(itemAddDto, ownerId)));
     }
 
     @Override
-    public ItemDto updateItem(ItemDto itemDto, Long itemId, Long ownerId) {
+    public ItemLogDto updateItem(ItemUpdateDto itemUpdateDto, Long itemId, Long ownerId) {
         log.debug("Сервис - обновление item с id {}", itemId);
-        ItemDto itemBeforeUpdate = getItemById(itemId);
+        Item itemBeforeUpdate = itemRepository.findById(itemId).orElse(null);
         if (!isOwnerCorrect(ownerId, itemBeforeUpdate)) {
             throw new EntityNotFoundException("Владелец c id " + ownerId + " у item с id " + itemId + " не найден");
         }
-        return itemStorage.updateItem(itemDto, itemId, ownerId);
+        if (itemUpdateDto.getName() == null) {
+            itemUpdateDto.setName(itemBeforeUpdate.getName());
+        }
+        if (itemUpdateDto.getDescription() == null) {
+            itemUpdateDto.setDescription(itemBeforeUpdate.getDescription());
+        }
+        if (itemUpdateDto.getAvailable() == null) {
+            itemUpdateDto.setAvailable(itemBeforeUpdate.getAvailable());
+        }
+        return ItemMapper.mapToItemLogDto(itemRepository.save(ItemMapper.mapToItem(itemUpdateDto, itemId, ownerId)));
     }
 
     @Override
-    public ItemDto getItemById(Long itemId) {
+    public ItemLogDto getItemById(Long itemId, Long ownerId) {
         log.debug("Сервис -получение item по id {}", itemId);
-        ItemDto itemDto = itemStorage.getItemById(itemId);
         log.debug("Проверка item с id {} на существование", itemId);
-        if (itemDto == null) {
+
+        Item item = itemRepository.findById(itemId).orElse(null);
+        if (item == null) {
             throw new EntityNotFoundException("item с id " + itemId + " не найден");
         }
-        return itemDto;
+        if (Objects.equals(item.getOwnerId(), ownerId)) {
+            item.setLastBooking(bookingRepository
+                    .findFirst1ByItemIdAndStartIsBeforeAndStatusNotOrderByStartDesc(
+                            item.getId(), LocalDateTime.now(), BookingStatus.REJECTED));
+            item.setNextBooking(bookingRepository
+                    .findFirst1ByItemIdAndStartIsAfterAndStatusNotOrderByStart(
+                            item.getId(), LocalDateTime.now(), BookingStatus.REJECTED));
+        }
+        return ItemMapper.mapToItemLogDto(item);
     }
 
     @Override
-    public List<ItemDto> getAllItemsByOwnerId(Long ownerId) {
+    public List<ItemLogDto> getAllItemsByOwnerId(Long ownerId) {
         log.debug("Сервис - получение списка всех items для пользователя с id {}", ownerId);
         if (isOwnerEmpty(ownerId)) {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
-        return itemStorage.getAllItemsByOwnerId(ownerId);
+        List<Item> items = itemRepository.findByOwnerIdOrderById(ownerId);
+        List<Long> itemIds = items.stream()
+                .map(Item::getId)
+                .collect(Collectors.toList());
+        List<Booking> bookings = bookingRepository.findAllByItemIdInAndStatusNot(itemIds,
+                BookingStatus.REJECTED);
+        List<Comment> comments = commentRepository.findAllByItemIdIn(itemIds);
+
+        return items.stream()
+                .map(item -> {
+                    Booking lastBooking = bookings.stream()
+                            .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
+                                    booking.getStart().isBefore(LocalDateTime.now()))
+                            .max(Comparator.comparing(Booking::getStart))
+                            .orElse(null);
+
+                    Booking nextBooking = bookings.stream()
+                            .filter(booking -> Objects.equals(booking.getItem().getId(), item.getId()) &&
+                                    booking.getStart().isAfter(LocalDateTime.now()))
+                            .min(Comparator.comparing(Booking::getStart))
+                            .orElse(null);
+
+                    item.setLastBooking(lastBooking);
+                    item.setNextBooking(nextBooking);
+
+                    ItemLogDto itemLogDto = ItemMapper.mapToItemLogDto(item);
+                    return itemLogDto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
     public void deleteItemById(Long itemId) {
         log.debug("Сервис - удаление item по id {}", itemId);
-        itemStorage.deleteItemById(itemId);
+        itemRepository.deleteById(itemId);
     }
 
     @Override
-    public void deleteAllItemsByOwnerId(Long ownerId) {
-        log.debug("Сервис - удаление всех items для пользователя с id {}", ownerId);
-        if (isOwnerEmpty(ownerId)) {
-            throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
-        }
-        itemStorage.deleteAllItemsByOwnerId(ownerId);
-    }
-
-    @Override
-    public List<ItemDto> getItemsBySearchQuery(String text) {
+    public List<ItemLogDto> getItemsBySearchQuery(String text) {
         log.debug("Сервис - получение списка всех items, содержащих подстроку {}", text);
-        return itemStorage.getItemsBySearchQuery(textForSearchToLowerCase(text));
+        if (text == null || text.isBlank()) {
+            return new ArrayList<>();
+        }
+        return ItemMapper.mapToListItemLogDto(itemRepository.getItemsBySearchQuery(text));
+    }
+
+    @Override
+    public CommentInItemLogDto addComment(CommentAddDto commentAddDto, Long authorId, Long itemId) {
+        Item item = itemRepository.findById(itemId).orElse(null);
+        User author = userRepository.findById(authorId).orElse(null);
+
+        if (item == null) {
+            throw new EntityNotFoundException("Вещи с id " + itemId + " не существует");
+        }
+
+        if (author == null) {
+            throw new EntityNotFoundException("Пользователя с id " + authorId + " не существует");
+        }
+
+        if (!bookingRepository.existsByBookerIdAndItemIdAndStatusAndEndBefore(authorId, itemId,
+                BookingStatus.APPROVED, LocalDateTime.now())) {
+            throw new EntityNotAvailableException("Вы еще не арендовали эту вещь");
+        }
+
+        Comment comment = Comment.builder()
+                .text(commentAddDto.getText())
+                .itemId(itemId)
+                .author(author)
+                .created(LocalDateTime.now())
+                .build();
+
+        return CommentMapper.mapToCommentInItemLogDto(commentRepository.save(comment));
     }
 
     private boolean isOwnerEmpty(Long ownerId) {
         log.debug("Проверка пользователя на существование");
-        return userStorage.getUserById(ownerId) == null;
+        return !userRepository.existsById(ownerId);
     }
 
-    private boolean isOwnerCorrect(Long ownerId, ItemDto itemDto) {
+    private boolean isOwnerCorrect(Long ownerId, Item item) {
         log.debug("Проверка, что переданный владелец существует у item");
-        return Objects.equals(itemDto.getOwnerId(), ownerId);
-    }
-
-    private String textForSearchToLowerCase(String text) {
-        return !text.isBlank() ? text.toLowerCase() : null;
+        return Objects.equals(item.getOwnerId(), ownerId);
     }
 }
