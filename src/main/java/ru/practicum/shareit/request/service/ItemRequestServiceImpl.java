@@ -33,8 +33,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public ItemRequestLogDto addItemRequest(ItemRequestAddDto itemRequestAddDto, Long requesterId) {
         log.debug("Сервис - добавление запроса от пользователя {}", requesterId);
         User requester = getUserOrThrowEntityNotFoundException(requesterId);
-        ItemRequest itemRequest = itemRequestRepository.save(ItemRequestMapper
-                .mapToItemRequest(itemRequestAddDto, requester));
+        ItemRequest itemRequest = itemRequestRepository.save(ItemRequestMapper.mapToItemRequest(itemRequestAddDto, requester));
         return ItemRequestMapper.mapToItemRequestLogDto(itemRequest);
     }
 

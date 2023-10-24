@@ -22,6 +22,6 @@ public class UserAddDto {
     @NotBlank
     private String name;
     @NotBlank
-    @Email
+    @Email(regexp = "^(.+)@(\\S+)$")
     private String email;
 }

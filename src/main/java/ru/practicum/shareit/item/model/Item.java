@@ -11,18 +11,9 @@ import lombok.Builder;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.comment.model.Comment;
 import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.user.model.User;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Id;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Column;
-import javax.persistence.Transient;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.FetchType;
+import javax.persistence.*;
 import java.util.List;
 
 @Getter
@@ -44,8 +35,9 @@ public class Item {
     private String description;
     @Column(name = "available")
     private Boolean available;
-    @Column(name = "owner_id")
-    private Long ownerId;
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
     @Transient
     private Booking lastBooking;
     @Transient

@@ -8,29 +8,30 @@ import ru.practicum.shareit.item.dto.ItemLogDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ItemMapper {
-    public static Item mapToItem(ItemAddDto itemAddDto, Long ownerId, ItemRequest itemRequest) {
+    public static Item mapToItem(ItemAddDto itemAddDto, User owner, ItemRequest itemRequest) {
         return Item.builder()
                 .available(itemAddDto.getAvailable())
                 .description(itemAddDto.getDescription())
                 .name(itemAddDto.getName())
-                .ownerId(ownerId)
+                .owner(owner)
                 .itemRequest(itemRequest)
                 .build();
     }
 
-    public static Item mapToItem(ItemUpdateDto itemUpdateDto, Long itemId, Long ownerId) {
+    public static Item mapToItem(ItemUpdateDto itemUpdateDto, Long itemId, User owner) {
         return Item.builder()
                 .id(itemId)
                 .available(itemUpdateDto.getAvailable())
                 .description(itemUpdateDto.getDescription())
                 .name(itemUpdateDto.getName())
-                .ownerId(ownerId)
+                .owner(owner)
                 .build();
     }
 
@@ -40,7 +41,8 @@ public class ItemMapper {
                 .available(item.getAvailable())
                 .description(item.getDescription())
                 .name(item.getName())
-                .ownerId(item.getOwnerId())
+                //.ownerId(item.getOwnerId())
+                .ownerId(item.getOwner().getId())
                 .nextBooking(item.getNextBooking() != null ?
                         BookingMapper.mapToBookingShortDto(item.getNextBooking())
                         : null)

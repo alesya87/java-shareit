@@ -54,7 +54,9 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemLogDto addItem(ItemAddDto itemAddDto, Long ownerId) {
         log.debug("Сервис - добавление item");
-        if (isOwnerEmpty(ownerId)) {
+
+        User owner = userRepository.findById(ownerId).orElse(null);
+        if (owner == null) {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
 
@@ -62,7 +64,7 @@ public class ItemServiceImpl implements ItemService {
                 itemRequestRepository.findById(itemAddDto.getRequestId()).orElse(null)
                 : null;
 
-        Item item = itemRepository.save(ItemMapper.mapToItem(itemAddDto, ownerId, itemRequest));
+        Item item = itemRepository.save(ItemMapper.mapToItem(itemAddDto, owner, itemRequest));
 
         return ItemMapper.mapToItemLogDto(item);
     }
@@ -71,7 +73,13 @@ public class ItemServiceImpl implements ItemService {
     public ItemLogDto updateItem(ItemUpdateDto itemUpdateDto, Long itemId, Long ownerId) {
         log.debug("Сервис - обновление item с id {}", itemId);
         Item itemBeforeUpdate = itemRepository.findById(itemId).orElse(null);
-        if (!isOwnerCorrect(ownerId, itemBeforeUpdate)) {
+
+        User owner = userRepository.findById(ownerId).orElse(null);
+        if (owner == null) {
+            throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
+        }
+
+        if (!isOwnerCorrect(owner, itemBeforeUpdate)) {
             throw new EntityNotFoundException("Владелец c id " + ownerId + " у item с id " + itemId + " не найден");
         }
         if (itemUpdateDto.getName() == null) {
@@ -83,7 +91,7 @@ public class ItemServiceImpl implements ItemService {
         if (itemUpdateDto.getAvailable() == null) {
             itemUpdateDto.setAvailable(itemBeforeUpdate.getAvailable());
         }
-        return ItemMapper.mapToItemLogDto(itemRepository.save(ItemMapper.mapToItem(itemUpdateDto, itemId, ownerId)));
+        return ItemMapper.mapToItemLogDto(itemRepository.save(ItemMapper.mapToItem(itemUpdateDto, itemId, owner)));
     }
 
     @Override
@@ -95,7 +103,7 @@ public class ItemServiceImpl implements ItemService {
         if (item == null) {
             throw new EntityNotFoundException("item с id " + itemId + " не найден");
         }
-        if (Objects.equals(item.getOwnerId(), ownerId)) {
+        if (Objects.equals(item.getOwner().getId(), ownerId)) {
             item.setLastBooking(bookingRepository
                     .findFirst1ByItemIdAndStartIsBeforeAndStatusNotOrderByStartDesc(
                             item.getId(), LocalDateTime.now(), BookingStatus.REJECTED));
@@ -191,8 +199,8 @@ public class ItemServiceImpl implements ItemService {
         return !userRepository.existsById(ownerId);
     }
 
-    private boolean isOwnerCorrect(Long ownerId, Item item) {
+    private boolean isOwnerCorrect(User owner, Item item) {
         log.debug("Проверка, что переданный владелец существует у item");
-        return Objects.equals(item.getOwnerId(), ownerId);
+        return Objects.equals(item.getOwner().getId(), owner.getId());
     }
 }

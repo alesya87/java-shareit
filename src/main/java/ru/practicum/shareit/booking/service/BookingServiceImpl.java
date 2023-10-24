@@ -58,7 +58,7 @@ public class BookingServiceImpl implements BookingService {
             throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
         }
 
-        if (Objects.equals(item.getOwnerId(), userId)) {
+        if (Objects.equals(item.getOwner().getId(), userId)) {
             throw new EntityAccessException("Пользователь не может забронировать свой предмет");
         }
 
@@ -87,7 +87,7 @@ public class BookingServiceImpl implements BookingService {
             throw new EntityNotFoundException("Бронирования с id " + bookingId + " не существует");
         }
 
-        if (!Objects.equals(booking.getItem().getOwnerId(), userId)) {
+        if (!Objects.equals(booking.getItem().getOwner().getId(), userId)) {
             throw new EntityAccessException("Бронирование может подтвердить только владелец вещи");
         }
 
@@ -120,7 +120,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (Objects.equals(booking.getBooker().getId(), userId)
-                || Objects.equals(booking.getItem().getOwnerId(), userId)) {
+                || Objects.equals(booking.getItem().getOwner().getId(), userId)) {
             return BookingMapper.mapToBookingLogDto(booking);
         } else {
             throw new EntityNotFoundException(String.format("Просмотр бронирования item с id " + booking.getItem().getId() +
