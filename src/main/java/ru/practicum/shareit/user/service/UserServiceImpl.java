@@ -11,6 +11,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -30,14 +31,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserLogDto updateUser(UserUpdateDto userUpdateDto, Long userId) {
         log.debug("Сервис -  обновление пользователя с id {}", userId);
-        UserLogDto userBeforeUpdate = getUserById(userId);
-        if (userUpdateDto.getName() == null) {
-            userUpdateDto.setName(userBeforeUpdate.getName());
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new EntityNotFoundException("пользователя с id " + userId + " не существует");
         }
-        if (userUpdateDto.getEmail() == null) {
-            userUpdateDto.setEmail(userBeforeUpdate.getEmail());
+        if (Objects.nonNull(userUpdateDto.getName())) {
+            user.setName(userUpdateDto.getName());
         }
-        return UserMapper.mapToUserLogDto(userRepository.save(UserMapper.mapToUser(userUpdateDto, userId)));
+        if (Objects.nonNull(userUpdateDto.getEmail())) {
+            user.setEmail(userUpdateDto.getEmail());
+        }
+        return UserMapper.mapToUserLogDto(userRepository.save(user));
     }
 
     @Override
