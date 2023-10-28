@@ -40,14 +40,14 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public UserLogDto updateUser(@Valid @RequestBody UserUpdateDto userUpdateDto, @Valid @PathVariable @NotNull Long userId) {
+    public UserLogDto updateUser(@Valid @RequestBody UserUpdateDto userUpdateDto, @PathVariable Long userId) {
         log.info("Получен PATCH-запрос к эндпоинту: '/users' на обновление пользователя с id {}: {}",
                 userId, userUpdateDto.toString());
         return userService.updateUser(userUpdateDto, userId);
     }
 
     @GetMapping("/{userId}")
-    public UserLogDto getUserById(@Valid @PathVariable @NotNull Long userId) {
+    public UserLogDto getUserById(@PathVariable Long userId) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}' на получение пользователя по id {}", userId);
         return userService.getUserById(userId);
     }
