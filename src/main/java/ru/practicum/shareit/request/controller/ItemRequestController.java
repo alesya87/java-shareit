@@ -27,7 +27,7 @@ public class ItemRequestController {
 
     @PostMapping
     public ItemRequestLogDto addItemRequest(@Valid @RequestBody ItemRequestAddDto itemRequestAddDto,
-                                            @Valid @RequestHeader(REQUESTER_HEADER) @NotNull Long requesterId) {
+                                            @RequestHeader(REQUESTER_HEADER) Long requesterId) {
         log.info("Получен POST-запрос к эндпоинту: '/requests' на добавление запроса от ползователя {}", requesterId);
         return itemRequestService.addItemRequest(itemRequestAddDto, requesterId);
     }

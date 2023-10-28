@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotBlank;
 
 @Getter
 @Setter
@@ -18,6 +18,6 @@ import javax.validation.constraints.NotEmpty;
 @NoArgsConstructor
 @Builder
 public class ItemRequestAddDto {
-    @NotEmpty
+    @NotBlank
     private String description;
 }
