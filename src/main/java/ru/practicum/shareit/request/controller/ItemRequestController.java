@@ -9,7 +9,6 @@ import ru.practicum.shareit.request.service.ItemRequestService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Slf4j
@@ -33,13 +32,13 @@ public class ItemRequestController {
     }
 
     @GetMapping
-    public List<ItemRequestLogDto> getAllItemRequestsByUserId(@Valid @RequestHeader(REQUESTER_HEADER) @NotNull Long requesterId) {
+    public List<ItemRequestLogDto> getAllItemRequestsByUserId(@RequestHeader(REQUESTER_HEADER) Long requesterId) {
         log.info("Получен GET-запрос к эндпоинту: '/requests' на просмотр своих запросов от ползователя {}", requesterId);
         return itemRequestService.getAllItemRequestsByUserId(requesterId);
     }
 
     @GetMapping("/all")
-    public List<ItemRequestLogDto> getAllItemRequests(@Valid @RequestHeader(REQUESTER_HEADER) @NotNull Long requesterId,
+    public List<ItemRequestLogDto> getAllItemRequests(@RequestHeader(REQUESTER_HEADER) Long requesterId,
                                                       @Valid @RequestParam(defaultValue = "0") @Min(value = 0) int from,
                                                       @Valid @RequestParam(defaultValue = "10") @Min(value = 1,
                                                               message = "size: минимум 1") int size) {
@@ -48,8 +47,8 @@ public class ItemRequestController {
     }
 
     @GetMapping("/{requestId}")
-    public ItemRequestLogDto getItemRequestById(@Valid @RequestHeader(REQUESTER_HEADER) @NotNull Long userId,
-                                                @Valid @PathVariable @NotNull Long requestId) {
+    public ItemRequestLogDto getItemRequestById(@RequestHeader(REQUESTER_HEADER) Long userId,
+                                                @PathVariable Long requestId) {
         log.info("Получен GET-запрос к эндпоинту: '/requests/{requestId}' " +
                 "на просмотр запроса с id {} от ползователя {}", requestId, userId);
         return itemRequestService.getItemRequestById(userId, requestId);
