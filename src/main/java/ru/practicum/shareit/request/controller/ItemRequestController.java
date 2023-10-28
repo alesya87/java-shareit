@@ -40,8 +40,7 @@ public class ItemRequestController {
     @GetMapping("/all")
     public List<ItemRequestLogDto> getAllItemRequests(@RequestHeader(REQUESTER_HEADER) Long requesterId,
                                                       @Valid @RequestParam(defaultValue = "0") @Min(value = 0) int from,
-                                                      @Valid @RequestParam(defaultValue = "10") @Min(value = 1,
-                                                              message = "size: минимум 1") int size) {
+                                                      @Valid @RequestParam(defaultValue = "10") @Min(value = 1) int size) {
         log.info("Получен GET-запрос к эндпоинту: '/requests/all' на просмотр всех запросов от ползователя {}", requesterId);
         return itemRequestService.getAllItemRequests(requesterId, from, size);
     }

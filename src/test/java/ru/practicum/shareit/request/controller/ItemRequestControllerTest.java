@@ -169,7 +169,7 @@ public class ItemRequestControllerTest {
     @Test
     public void shouldThrowExceptionWhenGetAllItemRequestsIfSize0() throws Exception {
         Matcher<String> contentMatcher = CoreMatchers
-                .containsString("getAllItemRequests.size");
+                .containsString("size: must be greater than or equal to 1");
 
         mockMvc.perform(get("/requests/all")
                         .characterEncoding(StandardCharsets.UTF_8)

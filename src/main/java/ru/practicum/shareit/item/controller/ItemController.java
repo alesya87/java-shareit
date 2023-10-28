@@ -23,7 +23,6 @@ import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Slf4j
@@ -39,7 +38,7 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemLogDto addItem(@Valid @RequestBody ItemAddDto itemAddDto, @Valid @NotNull @RequestHeader(OWNER_HEADER) Long ownerId) {
+    public ItemLogDto addItem(@Valid @RequestBody ItemAddDto itemAddDto, @RequestHeader(OWNER_HEADER) Long ownerId) {
         log.info("Получен POST-запрос к эндпоинту: '/items' на добавление item: " +
                         "name: {}, description: {}, isAvailable: {}, ownerId: {}",
                 itemAddDto.getName(), itemAddDto.getDescription(), itemAddDto.getAvailable(), ownerId);
@@ -47,8 +46,8 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public ItemLogDto updateItem(@RequestBody ItemUpdateDto itemUpdateDto, @Valid @PathVariable @NotNull Long itemId,
-                                 @Valid @NotNull @RequestHeader(OWNER_HEADER) Long ownerId) {
+    public ItemLogDto updateItem(@RequestBody ItemUpdateDto itemUpdateDto, @PathVariable Long itemId,
+                                 @RequestHeader(OWNER_HEADER) Long ownerId) {
         log.info("Получен PATCH-запрос к эндпоинту: '/items' на обновление item с id {} - name: {}," +
                         "description: {}, isAvailable: {}, ownerId: {}",
                 itemId, itemUpdateDto.getName(), itemUpdateDto.getDescription(), itemUpdateDto.getAvailable(), ownerId);
@@ -56,13 +55,13 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemLogDto getItemById(@Valid @PathVariable @NotNull Long itemId, @RequestHeader(OWNER_HEADER) Long ownerId) {
+    public ItemLogDto getItemById(@PathVariable Long itemId, @RequestHeader(OWNER_HEADER) Long ownerId) {
         log.info("Получен GET-запрос к эндпоинту: '/items/{itemId}' на получение item по id {}", itemId);
         return itemService.getItemById(itemId, ownerId);
     }
 
     @GetMapping
-    public List<ItemLogDto> getAllItemsByOwnerId(@Valid @NotNull @RequestHeader(OWNER_HEADER) Long ownerId,
+    public List<ItemLogDto> getAllItemsByOwnerId(@RequestHeader(OWNER_HEADER) Long ownerId,
                                                  @Valid @RequestParam(defaultValue = "0") @Min(value = 0) int from,
                                                  @Valid @RequestParam(defaultValue = "10") @Min(value = 1) int size) {
         log.info("Получен GET-запрос к эндпоинту: '/items' на получение списка всех items для пользователя с id {}", ownerId);
@@ -85,8 +84,8 @@ public class ItemController {
 
     @PostMapping("/{itemId}/comment")
     public CommentInItemLogDto addComment(@Valid @RequestBody CommentAddDto comment,
-                                          @Valid @NotNull @RequestHeader(OWNER_HEADER) Long authorId,
-                                          @Valid @NotNull @PathVariable Long itemId) {
+                                          @RequestHeader(OWNER_HEADER) Long authorId,
+                                          @PathVariable Long itemId) {
         log.info("Получен POST-запрос к эндпоинту: '/items//{itemId}/comment' на добавление комментария для вещи {}", itemId);
         return itemService.addComment(comment, authorId, itemId);
     }

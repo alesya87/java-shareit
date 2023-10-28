@@ -56,7 +56,7 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email", is(userLogDto.getEmail())))
+                .andExpect(jsonPath("$.name", is(userLogDto.getName())))
                 .andExpect(jsonPath("$.email", is(userLogDto.getEmail())));
 
         verify(userService, times(1)).addUser(userAddDto);
@@ -187,7 +187,7 @@ public class UserControllerTest {
     @Test
     public void shouldReturnAllUsers() throws Exception {
         UserLogDto userLogDto1 = new UserLogDto(1L, "Вася", "vasya@gmail.com");
-        UserLogDto userLogDto2 = new UserLogDto(2L, ">hf", "ura@gmail.com");
+        UserLogDto userLogDto2 = new UserLogDto(2L, "Юра", "ura@gmail.com");
         List<UserLogDto> userLogDtos = List.of(userLogDto1, userLogDto2);
 
         when(userService.getAllUsers()).thenReturn(userLogDtos);
