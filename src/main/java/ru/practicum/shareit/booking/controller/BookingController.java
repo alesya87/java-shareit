@@ -36,7 +36,7 @@ public class BookingController {
     }
 
     @PostMapping
-    public BookingLogDto postBookings(@Valid @RequestHeader(OWNER_HEADER) @NotNull Long userId,
+    public BookingLogDto addBooking(@RequestHeader(OWNER_HEADER) Long userId,
                                       @Valid @RequestBody BookingAddDto bookingAddDto) {
         log.debug("Поступил запрос на создание бронирования item с id {} для ползователя с id {}.",
                 bookingAddDto.getItemId(), userId);
@@ -44,23 +44,23 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    public BookingLogDto patchApproved(@Valid @RequestHeader(OWNER_HEADER) @NotNull Long userId,
+    public BookingLogDto updateBookingStatus(@RequestHeader(OWNER_HEADER) Long userId,
                                        @Valid @RequestParam @NotNull Boolean approved,
-                                       @Valid @NotNull @PathVariable Long bookingId) {
+                                       @PathVariable Long bookingId) {
         log.debug("Поступил запрос на одобрение(отклонение) бронирования с id {}", bookingId);
         return bookingService.updateBookingStatus(userId, approved, bookingId);
     }
 
     @GetMapping("/{bookingId}")
-    public BookingLogDto getBookingById(@Valid @RequestHeader(OWNER_HEADER) @NotNull Long userId,
-                                        @Valid @PathVariable @NotNull Long bookingId) {
+    public BookingLogDto getBookingById(@RequestHeader(OWNER_HEADER) Long userId,
+                                        @PathVariable Long bookingId) {
         log.debug("Поступил запрос на получение бронирования с id {}.", bookingId);
         return bookingService.getBookingById(userId, bookingId);
     }
 
     @GetMapping
-    public List<BookingLogDto> getAllUserBookings(@Valid @RequestParam(defaultValue = "ALL") @NotNull String state,
-                                                  @RequestHeader(OWNER_HEADER) @Valid @NotNull Long userId,
+    public List<BookingLogDto> getAllUserBookings(@RequestParam(defaultValue = "ALL") String state,
+                                                  @RequestHeader(OWNER_HEADER) Long userId,
                                                   @Valid @RequestParam(defaultValue = "0") @Min(value = 0) int from,
                                                   @Valid @RequestParam(defaultValue = "10") @Min(value = 1) int size) {
         log.debug("Поступил запрос на получение всех бронирований пользователя {} со статусом {}", userId, state);
@@ -68,7 +68,7 @@ public class BookingController {
     }
 
     @GetMapping("/owner")
-    public List<BookingLogDto> getAllItemBookingsUser(@Valid @RequestHeader(OWNER_HEADER) @NotNull Long userId,
+    public List<BookingLogDto> getAllItemBookingsUser(@RequestHeader(OWNER_HEADER) Long userId,
                                                       @RequestParam(defaultValue = "ALL") String state,
                                                       @Valid @RequestParam(defaultValue = "0") @Min(value = 0) int from,
                                                       @Valid @RequestParam(defaultValue = "10") @Min(value = 1) int size) {

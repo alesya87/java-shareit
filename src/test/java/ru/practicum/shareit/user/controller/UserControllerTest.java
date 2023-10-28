@@ -115,7 +115,7 @@ public class UserControllerTest {
 
     @Test
     public void shouldUpdateUser() throws Exception {
-        UserUpdateDto userUpdateDto = new UserUpdateDto("Вася", "asdfgh@gmail.com");
+        UserUpdateDto userUpdateDto = new UserUpdateDto("Вася", "vasya@gmail.com");
         UserLogDto userLogDto = new UserLogDto();
         userLogDto.setId(1);
         userLogDto.setName(userUpdateDto.getName());
