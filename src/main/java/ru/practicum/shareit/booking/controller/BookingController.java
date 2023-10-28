@@ -59,20 +59,29 @@ public class BookingController {
     }
 
     @GetMapping
-    public List<BookingLogDto> getAllUserBookings(@Valid @RequestParam(defaultValue = "ALL") @NotNull BookingStatus state,
+    public List<BookingLogDto> getAllUserBookings(@Valid @RequestParam(defaultValue = "ALL") @NotNull String state,
                                                   @RequestHeader(OWNER_HEADER) @Valid @NotNull Long userId,
                                                   @Valid @RequestParam(defaultValue = "0") @Min(value = 0) int from,
                                                   @Valid @RequestParam(defaultValue = "10") @Min(value = 1) int size) {
         log.debug("Поступил запрос на получение всех бронирований пользователя {} со статусом {}", userId, state);
-        return bookingService.getAllUserBookings(state, userId, from, size);
+        return bookingService.getAllUserBookings(getBookingStatusFromString(state), userId, from, size);
     }
 
     @GetMapping("/owner")
     public List<BookingLogDto> getAllItemBookingsUser(@Valid @RequestHeader(OWNER_HEADER) @NotNull Long userId,
-                                                      @RequestParam(defaultValue = "ALL") BookingStatus state,
+                                                      @RequestParam(defaultValue = "ALL") String state,
                                                       @Valid @RequestParam(defaultValue = "0") @Min(value = 0) int from,
                                                       @Valid @RequestParam(defaultValue = "10") @Min(value = 1) int size) {
         log.debug("Поступил запрос на получение всех бронировании от пользователя {} со статусом {}", userId, state);
-        return bookingService.getAllItemBookingsUser(userId, state, from, size);
+        return bookingService.getAllItemBookingsUser(userId, getBookingStatusFromString(state), from, size);
+    }
+
+    private static BookingStatus getBookingStatusFromString(String value) {
+        for (BookingStatus status : BookingStatus.values()) {
+            if (status.toString().equalsIgnoreCase(value)) {
+                return status;
+            }
+        }
+        return BookingStatus.UNSUPPORTED_STATUS;
     }
 }

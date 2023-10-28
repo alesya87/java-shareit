@@ -48,12 +48,11 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Item item = itemRepository.findById(bookingAddDto.getItemId()).orElse(null);
-        User booker = userRepository.findById(userId).orElse(null);
-
         if (item == null) {
             throw new EntityNotFoundException("Вещи с id " + bookingAddDto.getItemId() + " не существует");
         }
 
+        User booker = userRepository.findById(userId).orElse(null);
         if (booker == null) {
             throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
         }
@@ -67,13 +66,7 @@ public class BookingServiceImpl implements BookingService {
                     " не доступна к бронированию");
         }
 
-        Booking booking = Booking.builder()
-                .start(bookingAddDto.getStart())
-                .end(bookingAddDto.getEnd())
-                .booker(booker)
-                .item(item)
-                .status(BookingStatus.WAITING)
-                .build();
+        Booking booking = BookingMapper.mapToBooking(bookingAddDto, booker, item);
 
         return BookingMapper.mapToBookingLogDto(bookingRepository.save(booking));
     }
@@ -123,7 +116,7 @@ public class BookingServiceImpl implements BookingService {
                 || Objects.equals(booking.getItem().getOwner().getId(), userId)) {
             return BookingMapper.mapToBookingLogDto(booking);
         } else {
-            throw new EntityNotFoundException(String.format("Просмотр бронирования item с id " + booking.getItem().getId() +
+            throw new EntityAccessException(String.format("Просмотр бронирования item с id " + booking.getItem().getId() +
                     " доступно только для владельца"));
         }
     }
