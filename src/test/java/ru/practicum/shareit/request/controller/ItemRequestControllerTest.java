@@ -20,8 +20,10 @@ import java.util.Collections;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
 
 @WebMvcTest(controllers = ItemRequestController.class)
 public class ItemRequestControllerTest {
@@ -88,5 +90,127 @@ public class ItemRequestControllerTest {
                 .andExpect(content().string(contentMatcher));
 
         verify(itemRequestService, never()).addItemRequest(any(ItemRequestAddDto.class), anyLong());
+    }
+
+    @Test
+    public void shouldReturnItemRequestsByUserId() throws Exception {
+        ItemRequestLogDto itemRequestLogDto1 = new ItemRequestLogDto(1L, "description 1",
+                LocalDateTime.now(), Collections.emptyList());
+        ItemRequestLogDto itemRequestLogDto2 = new ItemRequestLogDto(2L, "description 2",
+                LocalDateTime.now(), Collections.emptyList());
+        List<ItemRequestLogDto> itemRequestLogDtos = List.of(itemRequestLogDto1, itemRequestLogDto2);
+
+        when(itemRequestService.getAllItemRequestsByUserId(1L))
+                .thenReturn(itemRequestLogDtos);
+
+        mockMvc.perform(get("/requests")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].description", is(itemRequestLogDto1.getDescription())))
+                .andExpect(jsonPath("$[1].description", is(itemRequestLogDto2.getDescription())));
+
+        verify(itemRequestService, times(1)).getAllItemRequestsByUserId(1L);
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenGetAllItemRequestsByUserIdIfNoUserHeader() throws Exception {
+        Matcher<String> contentMatcher = CoreMatchers
+                .containsString("X-Sharer-User-Id");
+
+        mockMvc.perform(get("/requests")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(contentMatcher));
+
+        verify(itemRequestService, never()).getAllItemRequestsByUserId(anyLong());
+    }
+
+    @Test
+    public void shouldReturnAllItemRequests() throws Exception {
+        ItemRequestLogDto itemRequestLogDto1 = new ItemRequestLogDto(1L, "description 1",
+                LocalDateTime.now(), Collections.emptyList());
+        ItemRequestLogDto itemRequestLogDto2 = new ItemRequestLogDto(2L, "description 2",
+                LocalDateTime.now(), Collections.emptyList());
+        List<ItemRequestLogDto> itemRequestLogDtos = List.of(itemRequestLogDto1, itemRequestLogDto2);
+
+        when(itemRequestService.getAllItemRequests(1L, 0, 10)).thenReturn(itemRequestLogDtos);
+
+        mockMvc.perform(get("/requests/all")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].description", is(itemRequestLogDto1.getDescription())))
+                .andExpect(jsonPath("$[1].description", is(itemRequestLogDto2.getDescription())));
+
+        verify(itemRequestService, times(1)).getAllItemRequests(1L, 0, 10);
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenGetAllItemRequestsIfFromNegative() throws Exception {
+        Matcher<String> contentMatcher = CoreMatchers
+                .containsString("from: must be greater than or equal to 0");
+
+        mockMvc.perform(get("/requests/all")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", 1)
+                        .param("from", "-1")
+                        .param("size", "10"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(contentMatcher));
+
+        verify(itemRequestService, never()).getAllItemRequests(anyLong(), anyInt(), anyInt());
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenGetAllItemRequestsIfSize0() throws Exception {
+        Matcher<String> contentMatcher = CoreMatchers
+                .containsString("getAllItemRequests.size");
+
+        mockMvc.perform(get("/requests/all")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", 1)
+                        .param("from", "0")
+                        .param("size", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(contentMatcher));
+
+        verify(itemRequestService, never()).getAllItemRequests(anyLong(), anyInt(), anyInt());
+    }
+
+    @Test
+    public void shouldReturnItemRequestById() throws Exception {
+        ItemRequestLogDto itemRequestLogDto = new ItemRequestLogDto(1L, "description 1",
+                LocalDateTime.now(), Collections.emptyList());
+
+        when(itemRequestService.getItemRequestById(1L, 1L)).thenReturn(itemRequestLogDto);
+
+        mockMvc.perform(get("/requests/{requestId}", 1L)
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", 1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.description", is(itemRequestLogDto.getDescription())));
+
+        verify(itemRequestService, times(1)).getItemRequestById(1L, 1L);
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenGetItemRequestByIdIfNoUserHeader() throws Exception {
+        Matcher<String> contentMatcher = CoreMatchers
+                .containsString("X-Sharer-User-Id");
+
+        mockMvc.perform(get("/requests/{requestId}", 1L)
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(contentMatcher));
+
+        verify(itemRequestService, never()).getItemRequestById(anyLong(), anyLong());
     }
 }
