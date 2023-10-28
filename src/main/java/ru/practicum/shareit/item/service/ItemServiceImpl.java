@@ -54,44 +54,47 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemLogDto addItem(ItemAddDto itemAddDto, Long ownerId) {
         log.debug("Сервис - добавление item");
-
         User owner = userRepository.findById(ownerId).orElse(null);
+
         if (owner == null) {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
 
-        ItemRequest itemRequest = itemAddDto.getRequestId() != null ?
-                itemRequestRepository.findById(itemAddDto.getRequestId()).orElse(null)
-                : null;
+        ItemRequest itemRequest = null;
+        if (itemAddDto.getRequestId() != null) {
+            itemRequest = itemRequestRepository.findById(itemAddDto.getRequestId()).orElse(null);
+        }
 
         Item item = itemRepository.save(ItemMapper.mapToItem(itemAddDto, owner, itemRequest));
-
         return ItemMapper.mapToItemLogDto(item);
     }
 
     @Override
     public ItemLogDto updateItem(ItemUpdateDto itemUpdateDto, Long itemId, Long ownerId) {
         log.debug("Сервис - обновление item с id {}", itemId);
-        Item itemBeforeUpdate = itemRepository.findById(itemId).orElse(null);
+        Item item = itemRepository.findById(itemId).orElse(null);
+        if (item == null) {
+            throw new EntityNotFoundException("Item с id " + itemId + " не найден");
+        }
 
         User owner = userRepository.findById(ownerId).orElse(null);
         if (owner == null) {
             throw new EntityNotFoundException("Владелец с id " + ownerId + " не найден");
         }
 
-        if (!isOwnerCorrect(owner, itemBeforeUpdate)) {
+        if (!isOwnerCorrect(owner, item)) {
             throw new EntityNotFoundException("Владелец c id " + ownerId + " у item с id " + itemId + " не найден");
         }
-        if (itemUpdateDto.getName() == null) {
-            itemUpdateDto.setName(itemBeforeUpdate.getName());
+        if (itemUpdateDto.getName() != null) {
+            item.setName(itemUpdateDto.getName());
         }
-        if (itemUpdateDto.getDescription() == null) {
-            itemUpdateDto.setDescription(itemBeforeUpdate.getDescription());
+        if (itemUpdateDto.getDescription() != null) {
+            item.setDescription(itemUpdateDto.getDescription());
         }
-        if (itemUpdateDto.getAvailable() == null) {
-            itemUpdateDto.setAvailable(itemBeforeUpdate.getAvailable());
+        if (itemUpdateDto.getAvailable() != null) {
+            item.setAvailable(itemUpdateDto.getAvailable());
         }
-        return ItemMapper.mapToItemLogDto(itemRepository.save(ItemMapper.mapToItem(itemUpdateDto, itemId, owner)));
+        return ItemMapper.mapToItemLogDto(itemRepository.save(item));
     }
 
     @Override
@@ -125,12 +128,15 @@ public class ItemServiceImpl implements ItemService {
         Pageable pageable = PageRequest.of(from / size, size, sort);
 
         List<Item> items = itemRepository.findByOwnerId(ownerId, pageable);
+        if (items == null || items.size() == 0) {
+            return Collections.emptyList();
+        }
+
         List<Long> itemIds = items.stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
         List<Booking> bookings = bookingRepository.findAllByItemIdInAndStatusNot(itemIds,
                 BookingStatus.REJECTED);
-        List<Comment> comments = commentRepository.findAllByItemIdIn(itemIds);
 
         return items.stream()
                 .map(item -> {
@@ -174,12 +180,11 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public CommentInItemLogDto addComment(CommentAddDto commentAddDto, Long authorId, Long itemId) {
         Item item = itemRepository.findById(itemId).orElse(null);
-        User author = userRepository.findById(authorId).orElse(null);
-
         if (item == null) {
             throw new EntityNotFoundException("Вещи с id " + itemId + " не существует");
         }
 
+        User author = userRepository.findById(authorId).orElse(null);
         if (author == null) {
             throw new EntityNotFoundException("Пользователя с id " + authorId + " не существует");
         }

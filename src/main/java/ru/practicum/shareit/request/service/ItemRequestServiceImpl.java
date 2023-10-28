@@ -32,7 +32,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public ItemRequestLogDto addItemRequest(ItemRequestAddDto itemRequestAddDto, Long requesterId) {
         log.debug("Сервис - добавление запроса от пользователя {}", requesterId);
-        User requester = getUserOrThrowEntityNotFoundException(requesterId);
+        User requester = getRequester(requesterId);
         ItemRequest itemRequest = itemRequestRepository.save(ItemRequestMapper.mapToItemRequest(itemRequestAddDto, requester));
         return ItemRequestMapper.mapToItemRequestLogDto(itemRequest);
     }
@@ -40,7 +40,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public List<ItemRequestLogDto> getAllItemRequestsByUserId(Long requesterId) {
         log.debug("Сервис - проосомтр всех своих запросов от пользователя {}", requesterId);
-        getUserOrThrowEntityNotFoundException(requesterId);
+        getRequester(requesterId);
         return ItemRequestMapper.mapToListItemRequestLogDto(itemRequestRepository
                 .findByRequesterIdOrderByCreatedDesc(requesterId));
     }
@@ -48,7 +48,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public List<ItemRequestLogDto> getAllItemRequests(Long requesterId, int from, int size) {
         log.debug("Сервис - проосомтр всех запросов от пользователя {}", requesterId);
-        getUserOrThrowEntityNotFoundException(requesterId);
+        getRequester(requesterId);
         Sort sort = Sort.by(Sort.Order.desc("created"));
         Pageable pageable = PageRequest.of(from, size, sort);
         List<ItemRequest> itemRequests = itemRequestRepository.findAllByRequesterIdNot(requesterId, pageable);
@@ -58,7 +58,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public ItemRequestLogDto getItemRequestById(Long userId, Long id) {
         log.debug("Сервис - проосомтр запроса с id {} от пользователя {}", id, userId);
-        getUserOrThrowEntityNotFoundException(userId);
+        getRequester(userId);
         ItemRequest itemRequest = itemRequestRepository.findById(id).orElse(null);
         log.debug("Сервис - проверка запроса на существование");
         if (itemRequest == null) {
@@ -67,7 +67,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return ItemRequestMapper.mapToItemRequestLogDto(itemRequest);
     }
 
-    private User getUserOrThrowEntityNotFoundException(Long userId) {
+    private User getRequester(Long userId) {
         User requester = userRepository.findById(userId).orElse(null);
         log.debug("Сервис - проверка пользователя на существование");
         if (requester == null) {

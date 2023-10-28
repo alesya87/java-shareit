@@ -22,18 +22,6 @@ class UserServiceImplUnitTest {
     private UserService userService;
     @Mock
     private UserRepository userRepository;
-    private  User userBeforeUpdate = User.builder()
-            .id(1L)
-            .email("userBeforeUpdate@email.com")
-            .name("UserBeforeUpdate")
-            .build();
-    private UserUpdateDto userAfterUpdateName = UserUpdateDto.builder()
-            .name("UserAfterUpdate")
-            .build();
-
-    private UserUpdateDto userAfterUpdateEmail = UserUpdateDto.builder()
-            .email("userAfterUpdate@email.com")
-            .build();
 
     @BeforeEach
     public void setUp() {
@@ -42,35 +30,56 @@ class UserServiceImplUnitTest {
 
     @Test
     public void shouldUpdateUserName() {
-        when(userRepository.findById(1L))
-                .thenReturn(Optional.of(userBeforeUpdate));
-        when(userRepository.save(any()))
-                .thenReturn(userBeforeUpdate);
+        long userId = 1L;
+        User user = new User(userId, "UserBeforeUpdate", "userBeforeUpdate@email.com");
+        UserUpdateDto userUpdateName = new UserUpdateDto("UserAfterUpdate", null);
 
-        userService.updateUser(userAfterUpdateName, 1L);
-        assertEquals(userBeforeUpdate.getName(), userAfterUpdateName.getName());
-        verify(userRepository, times(1)).save(userBeforeUpdate);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        assertEquals("UserBeforeUpdate", user.getName());
+
+        userService.updateUser(userUpdateName, userId);
+
+        assertEquals("UserAfterUpdate", user.getName());
+        assertEquals("userBeforeUpdate@email.com", user.getEmail());
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).save(user);
     }
 
     @Test
     public void shouldUpdateUserEmail() {
-        when(userRepository.findById(1L))
-                .thenReturn(Optional.of(userBeforeUpdate));
-        when(userRepository.save(any()))
-                .thenReturn(userBeforeUpdate);
+        long userId = 1L;
+        User user = new User(userId, "UserBeforeUpdate", "userBeforeUpdate@email.com");
+        UserUpdateDto userUpdateEmail = new UserUpdateDto(null, "userAfterUpdate@email.com");
 
-        userService.updateUser(userAfterUpdateEmail, 1L);
-        assertEquals(userBeforeUpdate.getEmail(), userAfterUpdateEmail.getEmail());
-        verify(userRepository, times(1)).save(userBeforeUpdate);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        assertEquals("userBeforeUpdate@email.com", user.getEmail());
+
+        userService.updateUser(userUpdateEmail, userId);
+
+        assertEquals("userAfterUpdate@email.com", user.getEmail());
+        assertEquals("UserBeforeUpdate", user.getName());
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).save(user);
     }
 
     @Test
-    public void shouldTrowEntityNotFoundExceptionWhenUpdateIfUserNotExist() {
-        when(userRepository.findById(1L))
-                .thenReturn(Optional.ofNullable(null));
-        Exception exception = assertThrows(EntityNotFoundException.class,
-                () -> userService.updateUser(userAfterUpdateEmail, 1L));
+    public void shouldTrowEntityNotFoundExceptionWhenGetUserByIdNotExist() {
+        long userId = 1L;
+        UserUpdateDto userUpdateEmail = new UserUpdateDto(null, "userAfterUpdate@email.com");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> userService.updateUser(userUpdateEmail, 1L));
+
         assertEquals("пользователя с id 1 не существует", exception.getMessage());
+
+        verify(userRepository, times(1)).findById(userId);
         verify(userRepository, never()).save(Mockito.any(User.class));
     }
 }

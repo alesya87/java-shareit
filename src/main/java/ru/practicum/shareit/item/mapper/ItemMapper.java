@@ -41,7 +41,6 @@ public class ItemMapper {
                 .available(item.getAvailable())
                 .description(item.getDescription())
                 .name(item.getName())
-                //.ownerId(item.getOwnerId())
                 .ownerId(item.getOwner().getId())
                 .nextBooking(item.getNextBooking() != null ?
                         BookingMapper.mapToBookingShortDto(item.getNextBooking())
