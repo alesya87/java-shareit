@@ -13,7 +13,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.request.dto.ItemRequestAddDto;
 import ru.practicum.shareit.request.dto.ItemRequestLogDto;
 import ru.practicum.shareit.request.service.ItemRequestService;
-import ru.practicum.shareit.user.dto.UserAddDto;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
