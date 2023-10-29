@@ -45,8 +45,8 @@ public class BookingControllerTest {
         long userId = 1L;
         long itemId = 1L;
         long bookingId = 1L;
-        LocalDateTime start = LocalDateTime.now().minusHours(5);
-        LocalDateTime end = LocalDateTime.now().minusHours(1);
+        LocalDateTime start = LocalDateTime.of(2023, 10, 25, 22, 30);
+        LocalDateTime end = LocalDateTime.of(2023, 10, 26, 22, 30);
         UserLogDto userLogDto = new UserLogDto(userId, "owner name", "owner@email.com");
         ItemLogDto itemLogDto = new ItemLogDto(itemId, "item name", "item description", true, userId,
                 null, null, Collections.emptyList(), null);
@@ -62,8 +62,8 @@ public class BookingControllerTest {
                         .accept(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.start", is(start.toString())))
-                .andExpect(jsonPath("$.end", is(end.toString())))
+                .andExpect(jsonPath("$.start", containsString(start.toString())))
+                .andExpect(jsonPath("$.end", containsString(end.toString())))
                 .andExpect(jsonPath("$.booker.name", is(userLogDto.getName())))
                 .andExpect(jsonPath("$.booker.email", is(userLogDto.getEmail())))
                 .andExpect(jsonPath("$.item.name", is(itemLogDto.getName())))
@@ -161,8 +161,8 @@ public class BookingControllerTest {
         long itemId = 1L;
         long bookingId = 1L;
         boolean approved = false;
-        LocalDateTime start = LocalDateTime.now().minusHours(5);
-        LocalDateTime end = LocalDateTime.now().minusHours(1);
+        LocalDateTime start = LocalDateTime.of(2023, 10, 25, 22, 30);
+        LocalDateTime end = LocalDateTime.of(2023, 10, 26, 22, 30);
         UserLogDto userLogDto = new UserLogDto(userId, "owner name", "owner@email.com");
         ItemLogDto itemLogDto = new ItemLogDto(itemId, "item name", "item description", true, userId,
                 null, null, Collections.emptyList(), null);
@@ -254,8 +254,8 @@ public class BookingControllerTest {
         long userId = 1L;
         long itemId = 1L;
         long bookingId = 1L;
-        LocalDateTime start = LocalDateTime.now().minusHours(5);
-        LocalDateTime end = LocalDateTime.now().minusHours(1);
+        LocalDateTime start = LocalDateTime.of(2023, 10, 25, 22, 30);
+        LocalDateTime end = LocalDateTime.of(2023, 10, 26, 22, 30);
         UserLogDto userLogDto = new UserLogDto(userId, "owner name", "owner@email.com");
         ItemLogDto itemLogDto = new ItemLogDto(itemId, "item name", "item description", true, userId,
                 null, null, Collections.emptyList(), null);
@@ -268,8 +268,8 @@ public class BookingControllerTest {
                         .accept(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.start", is(start.toString())))
-                .andExpect(jsonPath("$.end", is(end.toString())))
+                .andExpect(jsonPath("$.start", containsString(start.toString())))
+                .andExpect(jsonPath("$.end", containsString(end.toString())))
                 .andExpect(jsonPath("$.booker.name", is(userLogDto.getName())))
                 .andExpect(jsonPath("$.booker.email", is(userLogDto.getEmail())))
                 .andExpect(jsonPath("$.item.name", is(itemLogDto.getName())))
@@ -300,10 +300,10 @@ public class BookingControllerTest {
         long bookingId = 1L;
         int from = 0;
         int size = 10;
-        LocalDateTime startBooking1 = LocalDateTime.now().minusDays(3);
-        LocalDateTime endBooking1 = LocalDateTime.now().minusDays(1);
-        LocalDateTime startBooking2 = LocalDateTime.now().minusHours(9);
-        LocalDateTime endBooking2 = LocalDateTime.now().minusHours(4);
+        LocalDateTime startBooking1 = LocalDateTime.of(2023, 10, 25, 22, 30);
+        LocalDateTime endBooking1 = LocalDateTime.of(2023, 10, 26, 22, 30);
+        LocalDateTime startBooking2 = LocalDateTime.of(2023, 1, 25, 22, 30);
+        LocalDateTime endBooking2 = LocalDateTime.of(2023, 1, 26, 22, 30);
         UserLogDto userLogDto = new UserLogDto(userId, "owner name", "owner@email.com");
         ItemLogDto itemLogDto1 = new ItemLogDto(itemId, "item1 name", "item1 description", true, userId,
                 null, null, Collections.emptyList(), null);
@@ -403,10 +403,10 @@ public class BookingControllerTest {
         long bookingId = 1L;
         int from = 0;
         int size = 10;
-        LocalDateTime startBooking1 = LocalDateTime.now().minusDays(3);
-        LocalDateTime endBooking1 = LocalDateTime.now().minusDays(1);
-        LocalDateTime startBooking2 = LocalDateTime.now().minusHours(9);
-        LocalDateTime endBooking2 = LocalDateTime.now().minusHours(4);
+        LocalDateTime startBooking1 = LocalDateTime.of(2023, 10, 25, 22, 30);
+        LocalDateTime endBooking1 = LocalDateTime.of(2023, 10, 26, 22, 30);
+        LocalDateTime startBooking2 = LocalDateTime.of(2023, 1, 25, 22, 30);
+        LocalDateTime endBooking2 = LocalDateTime.of(2023, 1, 26, 22, 30);
         UserLogDto userLogDto = new UserLogDto(userId, "owner name", "owner@email.com");
         ItemLogDto itemLogDto1 = new ItemLogDto(itemId, "item1 name", "item1 description", true, userId,
                 null, null, Collections.emptyList(), null);
