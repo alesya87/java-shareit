@@ -32,6 +32,7 @@ public class ItemMapper {
                 .description(itemUpdateDto.getDescription())
                 .name(itemUpdateDto.getName())
                 .owner(owner)
+                .comments(Collections.emptyList())
                 .build();
     }
 
@@ -43,12 +44,11 @@ public class ItemMapper {
                 .name(item.getName())
                 .ownerId(item.getOwner().getId())
                 .nextBooking(item.getNextBooking() != null ?
-                        BookingMapper.mapToBookingShortDto(item.getNextBooking())
-                        : null)
-                .lastBooking(item.getLastBooking() != null ? BookingMapper.mapToBookingShortDto(item.getLastBooking())
-                        : null)
-                .comments(item.getComments() != null ? CommentMapper.mapToListCommentInItemLogDto(item.getComments())
-                        : Collections.emptyList())
+                        BookingMapper.mapToBookingShortDto(item.getNextBooking()) : null)
+                .lastBooking(item.getLastBooking() != null ?
+                        BookingMapper.mapToBookingShortDto(item.getLastBooking()) : null)
+                .comments(item.getComments() != null ?
+                        CommentMapper.mapToListCommentInItemLogDto(item.getComments()) : Collections.emptyList())
                 .requestId(item.getItemRequest() != null ? item.getItemRequest().getId() : null)
                 .build();
     }

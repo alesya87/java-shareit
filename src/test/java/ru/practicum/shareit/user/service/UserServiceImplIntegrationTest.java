@@ -3,8 +3,8 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import ru.practicum.shareit.user.dto.UserAddDto;
 import ru.practicum.shareit.user.dto.UserLogDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
@@ -12,8 +12,8 @@ import ru.practicum.shareit.user.dto.UserUpdateDto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-@AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class UserServiceImplIntegrationTest {
     @Autowired
     private UserService userService;

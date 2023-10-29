@@ -40,7 +40,7 @@ public class Comment {
     private String text;
     @Column(name = "item_id")
     private Long itemId;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "author_id")
     private User author;
     LocalDateTime created;
