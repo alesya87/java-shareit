@@ -29,7 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class BookingServiceImplUnitTest {
+class BookingServiceImplTest {
     private BookingService bookingService;
     @Mock
     private BookingRepository bookingRepository;

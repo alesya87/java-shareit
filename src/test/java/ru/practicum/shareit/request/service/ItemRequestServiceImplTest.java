@@ -22,7 +22,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-class ItemRequestServiceImplUnitTest {
+class ItemRequestServiceImplTest {
     private ItemRequestService itemRequestService;
     @Mock
     private ItemRequestRepository itemRequestRepository;
