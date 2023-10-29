@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class ItemServiceImpleIntegrationTest {
+public class ItemServiceImplIntegrationTest {
     @Autowired
     private ItemService itemService;
     @Autowired
@@ -67,7 +67,6 @@ public class ItemServiceImpleIntegrationTest {
         CommentAddDto commentAddDto = new CommentAddDto("Хорошая вещь");
         CommentInItemLogDto commentInItemLogDto = itemService.addComment(commentAddDto, userLogDto1.getId(), itemLogDto2.getId());
         ItemLogDto itemLogDto2WithBookingAndComment = itemService.getItemById(itemLogDto2.getId(), userLogDto2.getId());
-        System.out.println(itemLogDto2WithBookingAndComment);
         assertEquals(bookingLogDto.getId(), itemLogDto2WithBookingAndComment.getLastBooking().getId());
         assertEquals(bookingLogDto.getStart(), itemLogDto2WithBookingAndComment.getLastBooking().getStart());
         assertEquals(bookingLogDto.getEnd(), itemLogDto2WithBookingAndComment.getLastBooking().getEnd());
