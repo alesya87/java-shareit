@@ -1,4 +1,4 @@
-package ru.practicum.shareit.item.controller;
+package ru.practicum.shareit.item;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.CoreMatchers;
@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.item.comment.dto.CommentAddDto;
 import ru.practicum.shareit.item.comment.dto.CommentInItemLogDto;
+import ru.practicum.shareit.item.controller.ItemController;
 import ru.practicum.shareit.item.dto.ItemAddDto;
 import ru.practicum.shareit.item.dto.ItemLogDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
