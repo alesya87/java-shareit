@@ -5,7 +5,6 @@ import ru.practicum.shareit.item.comment.mapper.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemAddDto;
 import ru.practicum.shareit.item.dto.ItemInRequestLogDto;
 import ru.practicum.shareit.item.dto.ItemLogDto;
-import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
@@ -25,17 +24,6 @@ public class ItemMapper {
                 .build();
     }
 
-    public static Item mapToItem(ItemUpdateDto itemUpdateDto, Long itemId, User owner) {
-        return Item.builder()
-                .id(itemId)
-                .available(itemUpdateDto.getAvailable())
-                .description(itemUpdateDto.getDescription())
-                .name(itemUpdateDto.getName())
-                .owner(owner)
-                .comments(Collections.emptyList())
-                .build();
-    }
-
     public static ItemLogDto mapToItemLogDto(Item item) {
         return ItemLogDto.builder()
                 .id(item.getId())
@@ -47,8 +35,8 @@ public class ItemMapper {
                         BookingMapper.mapToBookingShortDto(item.getNextBooking()) : null)
                 .lastBooking(item.getLastBooking() != null ?
                         BookingMapper.mapToBookingShortDto(item.getLastBooking()) : null)
-                .comments(item.getComments() != null ?
-                        CommentMapper.mapToListCommentInItemLogDto(item.getComments()) : Collections.emptyList())
+                .comments(item.getComments() != null ? CommentMapper.mapToListCommentInItemLogDto(item.getComments())
+                        : Collections.emptyList())
                 .requestId(item.getItemRequest() != null ? item.getItemRequest().getId() : null)
                 .build();
     }

@@ -62,14 +62,14 @@ public class ItemServiceImplIntegrationTest {
         BookingAddDto bookingAddDto = new BookingAddDto(itemLogDto2.getId(), startBooking, endBooking);
         BookingLogDto bookingLogDto = bookingService.addBooking(userLogDto1.getId(), bookingAddDto);
         bookingService.updateBookingStatus(userLogDto2.getId(), true, bookingLogDto.getId());
-        bookingService.getBookingById(userLogDto1.getId(), bookingLogDto.getId());
+        BookingLogDto bookingLogDtoUpdated = bookingService.getBookingById(userLogDto1.getId(), bookingLogDto.getId());
         Thread.sleep(2000);
         CommentAddDto commentAddDto = new CommentAddDto("Хорошая вещь");
         CommentInItemLogDto commentInItemLogDto = itemService.addComment(commentAddDto, userLogDto1.getId(), itemLogDto2.getId());
         ItemLogDto itemLogDto2WithBookingAndComment = itemService.getItemById(itemLogDto2.getId(), userLogDto2.getId());
-        assertEquals(bookingLogDto.getId(), itemLogDto2WithBookingAndComment.getLastBooking().getId());
-        assertEquals(bookingLogDto.getStart(), itemLogDto2WithBookingAndComment.getLastBooking().getStart());
-        assertEquals(bookingLogDto.getEnd(), itemLogDto2WithBookingAndComment.getLastBooking().getEnd());
+        assertEquals(bookingLogDtoUpdated.getId(), itemLogDto2WithBookingAndComment.getLastBooking().getId());
+        assertEquals(bookingLogDtoUpdated.getStart(), itemLogDto2WithBookingAndComment.getLastBooking().getStart());
+        assertEquals(bookingLogDtoUpdated.getEnd(), itemLogDto2WithBookingAndComment.getLastBooking().getEnd());
         assertEquals(commentInItemLogDto.getText(), itemLogDto2WithBookingAndComment.getComments().get(0).getText());
         assertEquals(commentInItemLogDto.getAuthorName(), itemLogDto2WithBookingAndComment.getComments().get(0).getAuthorName());
         assertEquals(commentInItemLogDto.getCreated(), itemLogDto2WithBookingAndComment.getComments().get(0).getCreated());

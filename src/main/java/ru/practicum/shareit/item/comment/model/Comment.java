@@ -11,14 +11,7 @@ import lombok.Builder;
 import org.hibernate.annotations.GenericGenerator;
 import ru.practicum.shareit.user.model.User;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Id;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Column;
-import javax.persistence.ManyToOne;
-import javax.persistence.JoinColumn;
-import javax.persistence.FetchType;
+import javax.persistence.*;
 
 import java.time.LocalDateTime;
 
@@ -40,7 +33,7 @@ public class Comment {
     private String text;
     @Column(name = "item_id")
     private Long itemId;
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private User author;
     LocalDateTime created;

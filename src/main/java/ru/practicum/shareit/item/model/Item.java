@@ -42,10 +42,10 @@ public class Item {
     private Booking lastBooking;
     @Transient
     private Booking nextBooking;
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id")
     private List<Comment> comments;
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
     private ItemRequest itemRequest;
 }

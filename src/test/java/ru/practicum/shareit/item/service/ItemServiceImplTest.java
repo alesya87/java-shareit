@@ -386,7 +386,7 @@ class ItemServiceImplTest {
         Booking booking2 = new Booking(3L, startBooking2, endBooking2, item1, targetOwner, BookingStatus.FUTURE);
         List<Booking> bookings = List.of(booking1, booking2);
 
-        when(userRepository.existsById(ownerId)).thenReturn(true);
+        when(userRepository.findById(ownerId)).thenReturn(Optional.of(targetOwner));
         when(itemRepository.findByOwnerId(ownerId, pageable)).thenReturn(items);
         when(bookingRepository.findAllByItemIdInAndStatusNot(anyList(),
                 any(BookingStatus.class))).thenReturn(bookings);
@@ -397,7 +397,7 @@ class ItemServiceImplTest {
 
         assertEquals(ItemMapper.mapToListItemLogDto(items), result);
 
-        verify(userRepository, times(1)).existsById(ownerId);
+        verify(userRepository, times(1)).findById(ownerId);
         verify(itemRepository, times(1)).findByOwnerId(ownerId, pageable);
         verify(bookingRepository, times(1)).findAllByItemIdInAndStatusNot(anyList(),
                 any(BookingStatus.class));
@@ -405,14 +405,14 @@ class ItemServiceImplTest {
 
     @Test
     public void shouldReturnEmptyArrayWhenGetAllItemsByOwnerIdIfNoItems() {
-        when(userRepository.existsById(anyLong())).thenReturn(true);
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
         when(itemRepository.findByOwnerId(anyLong(), any(Pageable.class))).thenReturn(Collections.emptyList());
 
         List<ItemLogDto> result = itemService.getAllItemsByOwnerId(1L, 0, 2);
 
         assertEquals(Collections.emptyList(), result);
 
-        verify(userRepository, times(1)).existsById(anyLong());
+        verify(userRepository, times(1)).findById(anyLong());
         verify(itemRepository, times(1)).findByOwnerId(anyLong(), any(Pageable.class));
         verify(bookingRepository, never()).findAllByItemIdInAndStatusNot(anyList(),
                 any(BookingStatus.class));
@@ -422,14 +422,14 @@ class ItemServiceImplTest {
     public void shouldThrowEntityNotFoundExceptionWhenGetAllItemsByEmptyOwnerId() {
         long ownerId = 1L;
 
-        when(userRepository.existsById(ownerId)).thenReturn(false);
+        when(userRepository.findById(ownerId)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(EntityNotFoundException.class, () ->
                 itemService.getAllItemsByOwnerId(ownerId, 0, 2));
 
         assertEquals("Владелец с id 1 не найден", exception.getMessage());
 
-        verify(userRepository, times(1)).existsById(ownerId);
+        verify(userRepository, times(1)).findById(ownerId);
         verify(itemRepository, never()).findByOwnerId(anyLong(), any(Pageable.class));
         verify(bookingRepository, never()).findAllByItemIdInAndStatusNot(anyList(),
                 any(BookingStatus.class));

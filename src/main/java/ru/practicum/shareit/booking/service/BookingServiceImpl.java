@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingAddDto;
 import ru.practicum.shareit.booking.dto.BookingLogDto;
@@ -37,6 +38,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingLogDto addBooking(Long userId, BookingAddDto bookingAddDto) {
         log.debug("Сервис - добавление бронирования");
         LocalDateTime currentDateTime = LocalDateTime.now();
@@ -47,15 +49,11 @@ public class BookingServiceImpl implements BookingService {
                     " и конца аренды " + bookingAddDto.getEnd());
         }
 
-        Item item = itemRepository.findById(bookingAddDto.getItemId()).orElse(null);
-        if (item == null) {
-            throw new EntityNotFoundException("Вещи с id " + bookingAddDto.getItemId() + " не существует");
-        }
+        Item item = itemRepository.findById(bookingAddDto.getItemId()).orElseThrow(() ->
+                new EntityNotFoundException("Вещи с id " + bookingAddDto.getItemId() + " не существует"));
 
-        User booker = userRepository.findById(userId).orElse(null);
-        if (booker == null) {
-            throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
-        }
+        User booker = userRepository.findById(userId).orElseThrow(() ->
+                new EntityNotFoundException("Пользователя с id " + userId + " не существует"));
 
         if (Objects.equals(item.getOwner().getId(), userId)) {
             throw new EntityAccessException("Пользователь не может забронировать свой предмет");
@@ -72,13 +70,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingLogDto updateBookingStatus(Long userId, Boolean approved, Long bookingId) {
         log.debug("Сервис - изменение статуса бронирования с id {}", bookingId);
-        Booking booking = bookingRepository.findById(bookingId).orElse(null);
-
-        if (booking == null) {
-            throw new EntityNotFoundException("Бронирования с id " + bookingId + " не существует");
-        }
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
+                new EntityNotFoundException("Бронирования с id " + bookingId + " не существует"));
 
         if (!Objects.equals(booking.getItem().getOwner().getId(), userId)) {
             throw new EntityAccessException("Бронирование может подтвердить только владелец вещи");
@@ -104,13 +100,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingLogDto getBookingById(Long userId, Long bookingId) {
         log.debug("Сервис - получение бронирования с id {}", bookingId);
-        Booking booking = bookingRepository.findById(bookingId).orElse(null);
-
-        if (booking == null) {
-            throw new EntityNotFoundException("Бронирования с id " + bookingId + " не существует");
-        }
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
+                new EntityNotFoundException("Бронирования с id " + bookingId + " не существует"));
 
         if (Objects.equals(booking.getBooker().getId(), userId)
                 || Objects.equals(booking.getItem().getOwner().getId(), userId)) {
@@ -122,13 +116,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public List<BookingLogDto> getAllUserBookings(BookingStatus state, Long userId, int from, int size) {
         log.debug("Сервис - получение всех бронирований пользователя {} со статусом {}", userId, state);
 
-        User booker = userRepository.findById(userId).orElse(null);
-        if (booker == null) {
-            throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
-        }
+        User booker = userRepository.findById(userId).orElseThrow(() ->
+                new EntityNotFoundException("Пользователя с id " + userId + " не существует"));
+
         Sort sort = Sort.by(Sort.Order.desc("start"));
         Pageable pageable = PageRequest.of(from / size, size, sort);
 
@@ -156,13 +150,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public List<BookingLogDto> getAllItemBookingsUser(Long userId, BookingStatus state, int from, int size) {
         log.debug("Сервис - получение всех бронирований ползователя {} со статусом {}", userId, state);
 
-        User booker = userRepository.findById(userId).orElse(null);
-        if (booker == null) {
-            throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
-        }
+        User booker = userRepository.findById(userId).orElseThrow(() ->
+                new EntityNotFoundException("Пользователя с id " + userId + " не существует"));
 
         Sort sort = Sort.by(Sort.Order.desc("start"));
         Pageable pageable = PageRequest.of(from / size, size, sort);

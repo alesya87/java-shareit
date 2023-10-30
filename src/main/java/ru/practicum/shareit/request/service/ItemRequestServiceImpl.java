@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.EntityNotFoundException;
 import ru.practicum.shareit.request.dto.ItemRequestAddDto;
 import ru.practicum.shareit.request.dto.ItemRequestLogDto;
@@ -30,6 +31,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
+    @Transactional
     public ItemRequestLogDto addItemRequest(ItemRequestAddDto itemRequestAddDto, Long requesterId) {
         log.debug("Сервис - добавление запроса от пользователя {}", requesterId);
         User requester = getRequester(requesterId);
@@ -38,6 +40,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
+    @Transactional
     public List<ItemRequestLogDto> getAllItemRequestsByUserId(Long requesterId) {
         log.debug("Сервис - проосомтр всех своих запросов от пользователя {}", requesterId);
         getRequester(requesterId);
@@ -46,6 +49,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
+    @Transactional
     public List<ItemRequestLogDto> getAllItemRequests(Long requesterId, int from, int size) {
         log.debug("Сервис - проосомтр всех запросов от пользователя {}", requesterId);
         getRequester(requesterId);
@@ -56,23 +60,21 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
+    @Transactional
     public ItemRequestLogDto getItemRequestById(Long userId, Long id) {
         log.debug("Сервис - проосомтр запроса с id {} от пользователя {}", id, userId);
         getRequester(userId);
-        ItemRequest itemRequest = itemRequestRepository.findById(id).orElse(null);
         log.debug("Сервис - проверка запроса на существование");
-        if (itemRequest == null) {
-            throw new EntityNotFoundException("Запроса с id " + id + " не существует");
-        }
+        ItemRequest itemRequest = itemRequestRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Запроса с id " + id + " не существует"));
         return ItemRequestMapper.mapToItemRequestLogDto(itemRequest);
     }
 
+    @Transactional
     private User getRequester(Long userId) {
-        User requester = userRepository.findById(userId).orElse(null);
         log.debug("Сервис - проверка пользователя на существование");
-        if (requester == null) {
-            throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
-        }
+        User requester = userRepository.findById(userId).orElseThrow(() ->
+                new EntityNotFoundException("Пользователя с id " + userId + " не существует"));
         return requester;
     }
 }

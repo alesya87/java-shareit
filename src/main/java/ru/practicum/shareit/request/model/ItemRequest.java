@@ -10,15 +10,7 @@ import lombok.Builder;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Id;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Column;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.JoinColumn;
+import javax.persistence.*;
 import java.util.List;
 import java.time.LocalDateTime;
 
@@ -37,12 +29,12 @@ public class ItemRequest {
     private Long id;
     @Column(name = "description")
     private String description;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id")
     private User requester;
     @Column(name = "created")
     private LocalDateTime created;
-    @OneToMany
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
     private List<Item> items;
 }
