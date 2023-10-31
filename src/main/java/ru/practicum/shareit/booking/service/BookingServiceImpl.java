@@ -1,7 +1,11 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingAddDto;
 import ru.practicum.shareit.booking.dto.BookingLogDto;
@@ -19,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Slf4j
-@Component
+@Service
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
@@ -34,6 +38,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingLogDto addBooking(Long userId, BookingAddDto bookingAddDto) {
         log.debug("Сервис - добавление бронирования");
         LocalDateTime currentDateTime = LocalDateTime.now();
@@ -44,18 +49,13 @@ public class BookingServiceImpl implements BookingService {
                     " и конца аренды " + bookingAddDto.getEnd());
         }
 
-        Item item = itemRepository.findById(bookingAddDto.getItemId()).orElse(null);
-        User booker = userRepository.findById(userId).orElse(null);
+        Item item = itemRepository.findById(bookingAddDto.getItemId()).orElseThrow(() ->
+                new EntityNotFoundException("Вещи с id " + bookingAddDto.getItemId() + " не существует"));
 
-        if (item == null) {
-            throw new EntityNotFoundException("Вещи с id " + bookingAddDto.getItemId() + " не существует");
-        }
+        User booker = userRepository.findById(userId).orElseThrow(() ->
+                new EntityNotFoundException("Пользователя с id " + userId + " не существует"));
 
-        if (booker == null) {
-            throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
-        }
-
-        if (Objects.equals(item.getOwnerId(), userId)) {
+        if (Objects.equals(item.getOwner().getId(), userId)) {
             throw new EntityAccessException("Пользователь не может забронировать свой предмет");
         }
 
@@ -64,27 +64,19 @@ public class BookingServiceImpl implements BookingService {
                     " не доступна к бронированию");
         }
 
-        Booking booking = Booking.builder()
-                .start(bookingAddDto.getStart())
-                .end(bookingAddDto.getEnd())
-                .booker(booker)
-                .item(item)
-                .status(BookingStatus.WAITING)
-                .build();
+        Booking booking = BookingMapper.mapToBooking(bookingAddDto, booker, item);
 
         return BookingMapper.mapToBookingLogDto(bookingRepository.save(booking));
     }
 
     @Override
+    @Transactional
     public BookingLogDto updateBookingStatus(Long userId, Boolean approved, Long bookingId) {
         log.debug("Сервис - изменение статуса бронирования с id {}", bookingId);
-        Booking booking = bookingRepository.findById(bookingId).orElse(null);
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
+                new EntityNotFoundException("Бронирования с id " + bookingId + " не существует"));
 
-        if (booking == null) {
-            throw new EntityNotFoundException("Бронирования с id " + bookingId + " не существует");
-        }
-
-        if (!Objects.equals(booking.getItem().getOwnerId(), userId)) {
+        if (!Objects.equals(booking.getItem().getOwner().getId(), userId)) {
             throw new EntityAccessException("Бронирование может подтвердить только владелец вещи");
         }
 
@@ -108,83 +100,85 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookingLogDto getBookingById(Long userId, Long bookingId) {
         log.debug("Сервис - получение бронирования с id {}", bookingId);
-        Booking booking = bookingRepository.findById(bookingId).orElse(null);
-
-        if (booking == null) {
-            throw new EntityNotFoundException("Бронирования с id " + bookingId + " не существует");
-        }
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
+                new EntityNotFoundException("Бронирования с id " + bookingId + " не существует"));
 
         if (Objects.equals(booking.getBooker().getId(), userId)
-                || Objects.equals(booking.getItem().getOwnerId(), userId)) {
+                || Objects.equals(booking.getItem().getOwner().getId(), userId)) {
             return BookingMapper.mapToBookingLogDto(booking);
         } else {
-            throw new EntityNotFoundException(String.format("Просмотр бронирования item с id " + booking.getItem().getId() +
+            throw new EntityAccessException(String.format("Просмотр бронирования item с id " + booking.getItem().getId() +
                     " доступно только для владельца"));
         }
     }
 
     @Override
-    public List<BookingLogDto> getAllUserBookings(BookingStatus state, Long userId) {
+    @Transactional(readOnly = true)
+    public List<BookingLogDto> getAllUserBookings(BookingStatus state, Long userId, int from, int size) {
         log.debug("Сервис - получение всех бронирований пользователя {} со статусом {}", userId, state);
 
-        User booker = userRepository.findById(userId).orElse(null);
-        if (booker == null) {
-            throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
-        }
+        User booker = userRepository.findById(userId).orElseThrow(() ->
+                new EntityNotFoundException("Пользователя с id " + userId + " не существует"));
+
+        Sort sort = Sort.by(Sort.Order.desc("start"));
+        Pageable pageable = PageRequest.of(from / size, size, sort);
 
         LocalDateTime currentDateTime = LocalDateTime.now();
         switch (state) {
             case ALL:
                 return BookingMapper.mapToListBookingDto(bookingRepository
-                        .findByBookerIdOrderByStartDesc(userId));
+                        .findByBookerId(userId, pageable));
             case PAST:
                 return BookingMapper.mapToListBookingDto(bookingRepository
-                        .findByEndIsBeforeAndBookerIdOrderByStartDesc(currentDateTime, userId));
+                        .findByEndIsBeforeAndBookerId(currentDateTime, userId, pageable));
             case FUTURE:
                 return BookingMapper.mapToListBookingDto(bookingRepository
-                        .findByStartIsAfterAndBookerIdOrderByStartDesc(currentDateTime, userId));
+                        .findByStartIsAfterAndBookerId(currentDateTime, userId, pageable));
             case CURRENT:
                 return BookingMapper.mapToListBookingDto(bookingRepository
-                        .findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(userId,
-                                currentDateTime, currentDateTime));
+                        .findByBookerIdAndStartBeforeAndEndAfter(userId,
+                                currentDateTime, currentDateTime, pageable));
             case WAITING:
             case REJECTED:
                 return BookingMapper.mapToListBookingDto(bookingRepository
-                        .findByStatusAndBookerIdOrderByStartDesc(state, userId));
+                        .findByStatusAndBookerId(state, userId, pageable));
         }
         throw new UnsupportedStatusException("Unknown state: " + state);
     }
 
     @Override
-    public List<BookingLogDto> getAllItemBookingsUser(Long userId, BookingStatus state) {
+    @Transactional(readOnly = true)
+    public List<BookingLogDto> getAllItemBookingsUser(Long userId, BookingStatus state, int from, int size) {
         log.debug("Сервис - получение всех бронирований ползователя {} со статусом {}", userId, state);
 
-        User booker = userRepository.findById(userId).orElse(null);
-        if (booker == null) {
-            throw new EntityNotFoundException("Пользователя с id " + userId + " не существует");
-        }
+        User booker = userRepository.findById(userId).orElseThrow(() ->
+                new EntityNotFoundException("Пользователя с id " + userId + " не существует"));
+
+        Sort sort = Sort.by(Sort.Order.desc("start"));
+        Pageable pageable = PageRequest.of(from / size, size, sort);
 
         LocalDateTime currentDateTime = LocalDateTime.now();
         switch (state) {
             case ALL:
                 return BookingMapper.mapToListBookingDto(bookingRepository
-                        .findByItem_OwnerIdOrderByStartDesc(userId));
+                        .findByItem_OwnerId(userId, pageable));
             case PAST:
                 return BookingMapper.mapToListBookingDto(bookingRepository
-                        .findByItem_OwnerIdAndEndIsBeforeOrderByStartDesc(userId, currentDateTime));
+                        .findByItem_OwnerIdAndEndIsBefore(userId, currentDateTime, pageable));
             case FUTURE:
                 return BookingMapper.mapToListBookingDto(bookingRepository
-                        .findByItem_OwnerIdAndEndIsAfterOrderByStartDesc(userId, currentDateTime));
+                        .findByItem_OwnerIdAndEndIsAfter(userId, currentDateTime, pageable));
             case CURRENT:
                 return BookingMapper.mapToListBookingDto(bookingRepository
-                        .findByItem_OwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(userId,
-                                currentDateTime, currentDateTime));
+                        .findByItem_OwnerIdAndStartBeforeAndEndAfter(userId,
+                                currentDateTime, currentDateTime, pageable));
             case WAITING:
             case REJECTED:
                 return BookingMapper.mapToListBookingDto(bookingRepository
-                        .findByItem_OwnerIdAndStatusOrderByStartDesc(userId, state));
+                        .findByItem_OwnerIdAndStatus(userId, state, pageable));
         }
         throw new UnsupportedStatusException("Unknown state: " + state);
     }

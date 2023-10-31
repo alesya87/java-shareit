@@ -1,4 +1,4 @@
-package ru.practicum.shareit.user.dto;
+package ru.practicum.shareit.item.dto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,9 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-
 @Getter
 @Setter
 @ToString
@@ -18,10 +15,10 @@ import javax.validation.constraints.NotBlank;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserAddDto {
-    @NotBlank
+public class ItemInRequestLogDto {
+    private Long id;
     private String name;
-    @NotBlank
-    @Email(regexp = "^(.+)@(\\S+)$")
-    private String email;
+    private String description;
+    private Long requestId;
+    private Boolean available;
 }

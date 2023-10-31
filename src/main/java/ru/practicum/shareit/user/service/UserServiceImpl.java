@@ -1,7 +1,8 @@
 package ru.practicum.shareit.user.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.user.dto.UserAddDto;
 import ru.practicum.shareit.exception.EntityNotFoundException;
 import ru.practicum.shareit.user.dto.UserLogDto;
@@ -11,9 +12,10 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
-@Component
+@Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
@@ -22,42 +24,47 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserLogDto addUser(UserAddDto userAddDto) {
         log.debug("Сервис - добавление пользователя");
         return UserMapper.mapToUserLogDto(userRepository.save(UserMapper.mapToUser(userAddDto)));
     }
 
     @Override
+    @Transactional
     public UserLogDto updateUser(UserUpdateDto userUpdateDto, Long userId) {
         log.debug("Сервис -  обновление пользователя с id {}", userId);
-        UserLogDto userBeforeUpdate = getUserById(userId);
-        if (userUpdateDto.getName() == null) {
-            userUpdateDto.setName(userBeforeUpdate.getName());
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new EntityNotFoundException("пользователя с id " + userId + " не существует"));
+
+        if (Objects.nonNull(userUpdateDto.getName())) {
+            user.setName(userUpdateDto.getName());
         }
-        if (userUpdateDto.getEmail() == null) {
-            userUpdateDto.setEmail(userBeforeUpdate.getEmail());
+        if (Objects.nonNull(userUpdateDto.getEmail())) {
+            user.setEmail(userUpdateDto.getEmail());
         }
-        return UserMapper.mapToUserLogDto(userRepository.save(UserMapper.mapToUser(userUpdateDto, userId)));
+        return UserMapper.mapToUserLogDto(userRepository.save(user));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserLogDto getUserById(Long id) {
         log.debug("Сервис - получение пользователя по id {}", id);
         log.debug("Проверка пользователя с id {} на существование", id);
-        User user = userRepository.findById(id).orElse(null);
-        if (user == null) {
-            throw new EntityNotFoundException("пользователя с id " + id + " не существует");
-        }
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("пользователя с id " + id + " не существует"));
         return UserMapper.mapToUserLogDto(user);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserLogDto> getAllUsers() {
         log.debug("Сервис - получение списка всех пользователей");
         return UserMapper.mapToListUserLogDto(userRepository.findAll());
     }
 
     @Override
+    @Transactional
     public void deleteUserById(Long id) {
         log.debug("Сервис - удаление пользователя по id {}", id);
         userRepository.deleteById(id);

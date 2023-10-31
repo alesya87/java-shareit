@@ -22,12 +22,12 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class,
-            IncorrectEmailException.class,
             MissingRequestHeaderException.class,
             EntityNotAvailableException.class,
             IncorrectTimeDateException.class,
             UnsupportedStatusException.class,
-            DuplicateDataException.class})
+            DuplicateDataException.class,
+            javax.validation.ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(final Exception e) {
         log.error(e.getMessage());

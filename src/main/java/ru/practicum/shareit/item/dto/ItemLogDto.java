@@ -29,4 +29,5 @@ public class ItemLogDto {
     private BookingShortDto lastBooking;
     private BookingShortDto nextBooking;
     private List<CommentInItemLogDto> comments;
+    private Long requestId;
 }

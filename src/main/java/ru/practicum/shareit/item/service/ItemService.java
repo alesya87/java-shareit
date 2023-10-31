@@ -15,11 +15,11 @@ public interface ItemService {
 
     ItemLogDto getItemById(Long itemId, Long ownerId);
 
-    List<ItemLogDto> getAllItemsByOwnerId(Long ownerId);
+    List<ItemLogDto> getAllItemsByOwnerId(Long ownerId, int from, int size);
 
     void deleteItemById(Long itemId);
 
-    List<ItemLogDto> getItemsBySearchQuery(String text);
+    List<ItemLogDto> getItemsBySearchQuery(String text, int from, int size);
 
     CommentInItemLogDto addComment(CommentAddDto comment, Long authorId, Long itemId);
 }

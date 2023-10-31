@@ -19,6 +19,6 @@ import javax.validation.constraints.Email;
 @Builder
 public class UserUpdateDto {
     private String name;
-    @Email
+    @Email(regexp = "^(.+)@(\\S+)$")
     private String email;
 }

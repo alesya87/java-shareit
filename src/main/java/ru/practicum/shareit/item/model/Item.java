@@ -10,6 +10,8 @@ import lombok.Builder;
 
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.comment.model.Comment;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import java.util.List;
@@ -33,8 +35,9 @@ public class Item {
     private String description;
     @Column(name = "available")
     private Boolean available;
-    @Column(name = "owner_id")
-    private Long ownerId;
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
     @Transient
     private Booking lastBooking;
     @Transient
@@ -42,4 +45,7 @@ public class Item {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id")
     private List<Comment> comments;
+    @OneToOne
+    @JoinColumn(name = "request_id")
+    private ItemRequest itemRequest;
 }
