@@ -1,7 +1,7 @@
 package ru.practicum.shareit.user.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.user.dto.UserAddDto;
 import ru.practicum.shareit.exception.EntityNotFoundException;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Slf4j
-@Component
+@Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public UserLogDto getUserById(Long id) {
         log.debug("Сервис - получение пользователя по id {}", id);
         log.debug("Проверка пользователя с id {} на существование", id);
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<UserLogDto> getAllUsers() {
         log.debug("Сервис - получение списка всех пользователей");
         return UserMapper.mapToListUserLogDto(userRepository.findAll());

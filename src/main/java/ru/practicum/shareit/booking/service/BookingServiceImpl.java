@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingAddDto;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Slf4j
-@Component
+@Service
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
@@ -100,7 +100,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public BookingLogDto getBookingById(Long userId, Long bookingId) {
         log.debug("Сервис - получение бронирования с id {}", bookingId);
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
@@ -116,7 +116,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<BookingLogDto> getAllUserBookings(BookingStatus state, Long userId, int from, int size) {
         log.debug("Сервис - получение всех бронирований пользователя {} со статусом {}", userId, state);
 
@@ -150,7 +150,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<BookingLogDto> getAllItemBookingsUser(Long userId, BookingStatus state, int from, int size) {
         log.debug("Сервис - получение всех бронирований ползователя {} со статусом {}", userId, state);
 

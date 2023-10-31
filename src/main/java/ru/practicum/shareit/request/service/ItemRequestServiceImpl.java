@@ -40,7 +40,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<ItemRequestLogDto> getAllItemRequestsByUserId(Long requesterId) {
         log.debug("Сервис - проосомтр всех своих запросов от пользователя {}", requesterId);
         getRequester(requesterId);
@@ -49,7 +49,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<ItemRequestLogDto> getAllItemRequests(Long requesterId, int from, int size) {
         log.debug("Сервис - проосомтр всех запросов от пользователя {}", requesterId);
         getRequester(requesterId);
@@ -60,7 +60,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public ItemRequestLogDto getItemRequestById(Long userId, Long id) {
         log.debug("Сервис - проосомтр запроса с id {} от пользователя {}", id, userId);
         getRequester(userId);
@@ -70,7 +70,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return ItemRequestMapper.mapToItemRequestLogDto(itemRequest);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     private User getRequester(Long userId) {
         log.debug("Сервис - проверка пользователя на существование");
         User requester = userRepository.findById(userId).orElseThrow(() ->

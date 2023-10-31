@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -32,7 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Component
+@Service
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -92,7 +92,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public ItemLogDto getItemById(Long itemId, Long ownerId) {
         log.debug("Сервис -получение item по id {}", itemId);
         log.debug("Проверка item с id {} на существование", itemId);
@@ -112,7 +112,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<ItemLogDto> getAllItemsByOwnerId(Long ownerId, int from, int size) {
         log.debug("Сервис - получение списка всех items для пользователя с id {}", ownerId);
 
@@ -163,7 +163,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<ItemLogDto> getItemsBySearchQuery(String text, int from, int size) {
         log.debug("Сервис - получение списка всех items, содержащих подстроку {}", text);
         if (text == null || text.isBlank()) {

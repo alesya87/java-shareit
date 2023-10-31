@@ -45,7 +45,7 @@ public class Item {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id")
     private List<Comment> comments;
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "request_id")
     private ItemRequest itemRequest;
 }
