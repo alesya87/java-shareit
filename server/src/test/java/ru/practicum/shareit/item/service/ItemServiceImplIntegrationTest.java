@@ -12,16 +12,11 @@ import ru.practicum.shareit.item.comment.dto.CommentAddDto;
 import ru.practicum.shareit.item.comment.dto.CommentInItemLogDto;
 import ru.practicum.shareit.item.dto.ItemAddDto;
 import ru.practicum.shareit.item.dto.ItemLogDto;
-import ru.practicum.shareit.item.mapper.ItemMapper;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.request.dto.ItemRequestAddDto;
 import ru.practicum.shareit.request.dto.ItemRequestLogDto;
-import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.dto.UserAddDto;
 import ru.practicum.shareit.user.dto.UserLogDto;
-import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.time.LocalDateTime;
@@ -56,10 +51,10 @@ public class ItemServiceImplIntegrationTest {
         ItemLogDto itemLogDto1 = itemService.addItem(itemAddDto1, userLogDto2.getId());
         ItemLogDto itemLogDto1WithRequest = itemService.getItemById(itemLogDto1.getId(), userLogDto2.getId());
         ItemRequestLogDto itemRequestLogDtoWithItem = itemRequestService.getItemRequestById(userLogDto1.getId(), 1L);
-        assertEquals(itemLogDto1.getName() ,itemRequestLogDtoWithItem.getItems().get(0).getName());
-        assertEquals(itemLogDto1.getDescription() ,itemRequestLogDtoWithItem.getItems().get(0).getDescription());
-        assertEquals(itemLogDto1.getAvailable() ,itemRequestLogDtoWithItem.getItems().get(0).getAvailable());
-        assertEquals(itemLogDto1.getRequestId() ,itemRequestLogDtoWithItem.getId());
+        assertEquals(itemLogDto1.getName(), itemRequestLogDtoWithItem.getItems().get(0).getName());
+        assertEquals(itemLogDto1.getDescription(), itemRequestLogDtoWithItem.getItems().get(0).getDescription());
+        assertEquals(itemLogDto1.getAvailable(), itemRequestLogDtoWithItem.getItems().get(0).getAvailable());
+        assertEquals(itemLogDto1.getRequestId(), itemRequestLogDtoWithItem.getId());
 
         assertEquals(itemLogDto1, itemLogDto1WithRequest);
         assertEquals(itemLogDto1.getRequestId(), itemLogDto1WithRequest.getRequestId());
@@ -91,8 +86,8 @@ public class ItemServiceImplIntegrationTest {
         ItemLogDto itemLogDto3 = itemService.addItem(itemAddDto3, userLogDto1.getId());
         assertEquals(itemLogDto3, itemService.getItemById(itemLogDto3.getId(), userLogDto1.getId()));
         assertEquals(Collections.emptyList(), itemService.getItemsBySearchQuery("что-то", 0, 10));
-        assertEquals(1, itemService.getAllItemsByOwnerId(userLogDto1.getId(),0, 10).size());
+        assertEquals(1, itemService.getAllItemsByOwnerId(userLogDto1.getId(), 0, 10).size());
         itemService.deleteItemById(itemLogDto3.getId());
-        assertEquals(0, itemService.getAllItemsByOwnerId(userLogDto1.getId(),0, 10).size());
+        assertEquals(0, itemService.getAllItemsByOwnerId(userLogDto1.getId(), 0, 10).size());
     }
 }
